@@ -193,6 +193,19 @@ body {
   font-weight: 700;
 }
 
+/* RANK 1 MATCH LOG HIGHLIGHT */
+.rank-1-box {
+  border: 1px solid var(--accent);
+  background: rgba(245, 166, 35, 0.12); /* Subtle golden glow */
+  border-radius: 8px;
+  padding: 6px 2px;
+  box-shadow: 0 0 10px rgba(245, 166, 35, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+  
 </style>
 </head>
 <body>
@@ -500,15 +513,30 @@ function renderMatchLog(flash){
       const pd=m.players[p];
       if(!pd||!pd.joined){
         playerCells+=`<td style="color:var(--text2);font-size:13px;">—</td>`;
-      } else {
+     } else {
         const rank=m.joinedRanks?m.joinedRanks[p]:'?';
-        const rankClass=rank===1?'rank-1':rank===2?'rank-2':rank===3?'rank-3':'';
-        playerCells+=`<td>
-          <div style="font-size:11px;" class="joined-yes">✅</div>
-          <div class="${pd.paid?'paid-yes':'paid-no'}" style="font-size:11px;">${pd.paid?'💰':'❌'}</div>
-          <div style="font-size:12px;font-weight:700;">${parseFloat(pd.points).toFixed(2)}</div>
-          <div class="${rankClass}" style="font-size:11px;">#${rank}</div>
-        </td>`;
+        const isRank1 = rank === 1;
+        const rankClass = isRank1 ? 'rank-1' : rank===2 ? 'rank-2' : rank===3 ? 'rank-3' : '';
+        
+        if (isRank1) {
+          // Highlighted Rank 1 Box (Bolder, Larger, Gold Border)
+          playerCells+=`<td>
+            <div class="rank-1-box">
+              <div style="font-size:12px; font-weight:900;" class="joined-yes">✅</div>
+              <div class="${pd.paid?'paid-yes':'paid-no'}" style="font-size:12px; font-weight:900;">${pd.paid?'💰':'❌'}</div>
+              <div style="font-size:15px; font-weight:900; color:var(--accent);">${parseFloat(pd.points).toFixed(2)}</div>
+              <div class="${rankClass}" style="font-size:13px; font-weight:900;">#${rank}</div>
+            </div>
+          </td>`;
+        } else {
+          // Standard layout for everyone else
+          playerCells+=`<td>
+            <div style="font-size:11px;" class="joined-yes">✅</div>
+            <div class="${pd.paid?'paid-yes':'paid-no'}" style="font-size:11px;">${pd.paid?'💰':'❌'}</div>
+            <div style="font-size:12px; font-weight:700;">${parseFloat(pd.points).toFixed(2)}</div>
+            <div class="${rankClass}" style="font-size:11px;">#${rank}</div>
+          </td>`;
+        }
       }
     });
     const isWinner = m.fantasyWinner&&m.fantasyWinner!=='';
