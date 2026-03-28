@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VOIS Panthers IPL 2026 – Live Standings</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0a0f1e;--bg2:#0e1528;--bg3:#131c35;--card:#161f38;--card2:#1b2540;
+  --accent:#f5a623;--accent2:#e8531a;--green:#2ecc71;--red:#e74c3c;
+  --blue:#3498db;--purple:#9b59b6;--text:#e8eaf6;--text2:#8899bb;--border:#1e2d50;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before{
+  content:'';position:fixed;top:0;left:0;width:100%;height:100%;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 110%,rgba(46,139,87,0.08) 0%,transparent 70%),
+    radial-gradient(ellipse 100% 100% at 50% 50%,rgba(10,15,30,0) 0%,rgba(10,15,30,0.95) 100%);
+  pointer-events:none;z-index:0;
+}
+header{
+  position:relative;z-index:10;
+  background:linear-gradient(135deg,#0a0f1e 0%,#1a0a00 50%,#0a0f1e 100%);
+  border-bottom:2px solid var(--accent);padding:0 20px;
+  box-shadow:0 4px 30px rgba(245,166,35,0.2);
+}
+.header-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 0;flex-wrap:wrap;gap:10px;}
+.logo-area{display:flex;align-items:center;gap:14px;}
+.logo-icon{font-size:42px;filter:drop-shadow(0 0 10px var(--accent));}
+.title-main{font-family:'Bebas Neue',sans-serif;font-size:clamp(16px,3.5vw,30px);letter-spacing:3px;color:var(--accent);text-shadow:0 0 20px rgba(245,166,35,0.4);line-height:1;}
+.title-sub{font-family:'Orbitron',sans-serif;font-size:clamp(8px,1.2vw,11px);color:var(--text2);letter-spacing:4px;text-transform:uppercase;margin-top:3px;}
+.season-badge{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;padding:4px 12px;border-radius:20px;}
+.view-only-badge{background:rgba(52,152,219,0.2);color:var(--blue);border:1px solid var(--blue);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:2px;padding:4px 12px;border-radius:20px;}
+nav{position:sticky;top:0;z-index:100;background:rgba(14,21,40,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(10px);}
+.nav-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;gap:4px;padding:0 20px;overflow-x:auto;}
+.nav-btn{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;padding:14px 20px;border:none;background:none;color:var(--text2);cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all 0.2s;}
+.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.nav-btn:hover{color:var(--text);}
+.section{display:none;max-width:1400px;margin:0 auto;padding:24px 16px;position:relative;z-index:1;}
+.section.active{display:block;}
+.sec-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--accent);border-left:4px solid var(--accent);padding-left:14px;margin-bottom:24px;text-shadow:0 0 15px rgba(245,166,35,0.3);}
+.totals-bar{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px;}
+.total-chip{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 18px;flex:1;min-width:130px;text-align:center;}
+.total-chip-label{font-size:11px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;}
+.total-chip-val{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:var(--accent);margin-top:4px;}
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead tr{background:var(--bg3);}
+th{padding:12px 10px;text-align:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);border-bottom:2px solid var(--border);white-space:nowrap;}
+td{padding:10px 8px;text-align:center;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(245,166,35,0.04);}
+.rank-1{color:var(--accent);font-weight:700;}.rank-2{color:#c0c0c0;}.rank-3{color:#cd7f32;}
+.won-badge{background:rgba(46,204,113,0.15);color:var(--green);border:1px solid var(--green);border-radius:12px;padding:2px 8px;font-size:11px;}
+.lost-badge{background:rgba(231,76,60,0.1);color:var(--red);border-radius:12px;padding:2px 8px;font-size:11px;}
+.paid-yes{color:var(--green);font-weight:700;}.paid-no{color:var(--red);}
+.match-no-badge{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-weight:700;border-radius:6px;padding:2px 8px;font-size:12px;}
+.team-tag{background:rgba(52,152,219,0.15);color:var(--blue);border-radius:6px;padding:2px 6px;font-size:11px;}
+.transfer-done{background:rgba(46,204,113,0.15);color:var(--green);border:1px solid var(--green);border-radius:8px;padding:3px 10px;font-size:11px;font-weight:700;}
+.transfer-pending{background:rgba(245,166,35,0.12);color:var(--accent);border:1px solid var(--accent);border-radius:8px;padding:3px 10px;font-size:11px;font-weight:700;}
+/* LEADERBOARD */
+.lb-grid{display:grid;gap:14px;}
+.lb-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;display:grid;grid-template-columns:50px 1fr auto;align-items:center;gap:16px;transition:transform 0.2s,box-shadow 0.2s;}
+.lb-card:hover{transform:translateX(4px);box-shadow:0 4px 20px rgba(245,166,35,0.1);}
+.lb-card.rank1{border-color:var(--accent);background:linear-gradient(135deg,rgba(245,166,35,0.08),var(--card));}
+.lb-card.rank2{border-color:#c0c0c0;background:linear-gradient(135deg,rgba(192,192,192,0.05),var(--card));}
+.lb-card.rank3{border-color:#cd7f32;background:linear-gradient(135deg,rgba(205,127,50,0.05),var(--card));}
+.lb-rank{font-family:'Bebas Neue',sans-serif;font-size:36px;text-align:center;line-height:1;}
+.lb-card.rank1 .lb-rank{color:var(--accent);}.lb-card.rank2 .lb-rank{color:#c0c0c0;}.lb-card.rank3 .lb-rank{color:#cd7f32;}
+.lb-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;}
+.lb-stats{display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;}
+.lb-stat{font-size:12px;color:var(--text2);}.lb-stat span{color:var(--text);font-weight:700;}
+.lb-profit{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;text-align:right;}
+.lb-profit.pos{color:var(--green);}.lb-profit.neg{color:var(--red);}.lb-profit.neu{color:var(--text2);}
+.lb-wins{font-size:12px;color:var(--text2);text-align:right;margin-top:4px;}
+/* PLAYER STATS */
+.player-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.p-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.p-card-header{background:linear-gradient(135deg,var(--bg3),var(--card2));padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.p-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:20px;border:2px solid var(--accent);color:var(--accent);background:rgba(245,166,35,0.08);flex-shrink:0;}
+.p-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;}
+.p-winpct{font-size:12px;color:var(--text2);}.p-winpct span{color:var(--accent);font-weight:700;}
+.p-card-body{padding:16px 18px;}
+.p-stat-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.p-stat-row:last-child{border-bottom:none;}
+.p-stat-label{font-size:12px;color:var(--text2);letter-spacing:1px;}.p-stat-val{font-size:14px;font-weight:700;}
+.p-stat-val.green{color:var(--green);}.p-stat-val.red{color:var(--red);}.p-stat-val.accent{color:var(--accent);}
+.cf-tag{background:rgba(245,166,35,0.1);color:var(--accent);border-radius:6px;padding:1px 7px;font-size:11px;border:1px solid rgba(245,166,35,0.3);}
+/* GRAPHS */
+.graph-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+@media(max-width:900px){.graph-grid{grid-template-columns:1fr;}}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;}
+.chart-title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--text2);margin-bottom:16px;}
+.chart-wrap{position:relative;height:280px;}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--accent);}
+@media(max-width:600px){
+  .lb-card{grid-template-columns:40px 1fr auto;}
+  .lb-rank{font-size:26px;}.lb-name{font-size:17px;}
+}
+.no-data{text-align:center;color:var(--text2);padding:40px;font-size:16px;letter-spacing:1px;}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px;animation:blink 1.2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
+.last-updated{font-size:11px;color:var(--text2);letter-spacing:1px;margin-top:4px;}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="logo-area">
+      <div class="logo-icon">🏏</div>
+      <div>
+        <div class="title-main">VOIS Panthers IPL 2026 Fantasy League</div>
+        <div class="title-sub"><span class="live-dot"></span>MyCircle11 Private Contest · Season 2026</div>
+        <div class="last-updated" id="last-updated-txt"></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+      <div class="season-badge">IPL 2026</div>
+      <div class="view-only-badge">👁 VIEW ONLY</div>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="nav-inner">
+    <button class="nav-btn active" onclick="showSection('matchlog')">📋 Match Log</button>
+    <button class="nav-btn" onclick="showSection('playerstats')">👤 Player Stats</button>
+    <button class="nav-btn" onclick="showSection('leaderboard')">🏆 Leaderboard</button>
+    <button class="nav-btn" onclick="showSection('graphs')">📊 Graphs</button>
+  </div>
+</nav>
+
+<!-- MATCH LOG -->
+<div class="section active" id="sec-matchlog">
+  <div class="sec-title">Match Log</div>
+  <div class="totals-bar" id="totals-bar"></div>
+  <div class="table-wrap">
+    <table id="match-table"><thead><tr></tr></thead><tbody id="match-tbody"></tbody></table>
+  </div>
+  <div class="no-data" id="no-match-msg">No match data available yet. Check back soon!</div>
+</div>
+
+<!-- PLAYER STATS -->
+<div class="section" id="sec-playerstats">
+  <div class="sec-title">Player Stats</div>
+  <div class="player-cards" id="player-cards-wrap"></div>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="section" id="sec-leaderboard">
+  <div class="sec-title">Leaderboard</div>
+  <div class="lb-grid" id="lb-grid"></div>
+</div>
+
+<!-- GRAPHS -->
+<div class="section" id="sec-graphs">
+  <div class="sec-title">Graphs & Analytics</div>
+  <div class="graph-grid">
+    <div class="chart-card" style="grid-column:1/-1;">
+      <div class="chart-title">📈 Cumulative Profit/Loss per Player (Season)</div>
+      <div class="chart-wrap"><canvas id="chart-pnl"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">💰 Investment vs Winnings (Total)</div>
+      <div class="chart-wrap"><canvas id="chart-inv-win"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🏅 Wins Count by Player</div>
+      <div class="chart-wrap"><canvas id="chart-wins"></canvas></div>
+    </div>
+    <div class="chart-card" style="grid-column:1/-1;">
+      <div class="chart-title">📊 Per Match Points Comparison</div>
+      <div class="chart-wrap" style="height:320px;"><canvas id="chart-points"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🎯 Win % (among paid contestants)</div>
+      <div class="chart-wrap"><canvas id="chart-winpct"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">📦 Pool Money per Match</div>
+      <div class="chart-wrap"><canvas id="chart-pool"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PLAYERS=['Ashish','Kalpesh','Nilesh','Prabhat','Pritam','Sudhir','Swapnil'];
+const COLORS=['#f5a623','#3498db','#2ecc71','#e74c3c','#9b59b6','#1abc9c','#e67e22'];
+let matches=[];
+let charts={};
+
+// ── Load data from admin localStorage key (same browser) OR from embedded data
+function loadData(){
+  const raw=localStorage.getItem('vois_matches');
+  if(raw){
+    try{matches=JSON.parse(raw);}catch(e){matches=[];}
+  }
+  const ts=localStorage.getItem('vois_matches_updated');
+  if(ts){
+    document.getElementById('last-updated-txt').textContent='Last updated: '+new Date(parseInt(ts)).toLocaleString('en-IN');
+  }
+}
+
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  var sec=document.getElementById('sec-'+id);
+  if(sec) sec.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    var oc=b.getAttribute('onclick')||'';
+    if(oc.indexOf("'"+id+"'")>=0) b.classList.add('active');
+  });
+  if(id==='matchlog') renderMatchLog();
+  if(id==='playerstats') renderPlayerStats();
+  if(id==='leaderboard') renderLeaderboard();
+  if(id==='graphs') setTimeout(renderGraphs,50);
+}
+
+function renderMatchLog(){
+  const tbody=document.getElementById('match-tbody');
+  const msg=document.getElementById('no-match-msg');
+  tbody.innerHTML='';
+  const thead=document.querySelector('#match-table thead tr');
+  thead.innerHTML='';
+  ['Match','Date','Teams','Team Won','Contest','Joined','Fee(₹)','Pool(₹)','Fantasy Winner','Payout(₹)','Transferred'].forEach(h=>{
+    const th=document.createElement('th');th.textContent=h;thead.appendChild(th);
+  });
+  PLAYERS.forEach(p=>{
+    const th=document.createElement('th');
+    th.innerHTML=`<div style="writing-mode:vertical-rl;transform:rotate(180deg);height:78px;font-size:10px;white-space:nowrap;">${p}<br><span style="color:var(--text2);font-size:9px;">J/P/Pts/Rk</span></div>`;
+    thead.appendChild(th);
+  });
+  if(matches.length===0){msg.style.display='block';renderTotals();return;}
+  msg.style.display='none';
+  matches.forEach(m=>{
+    const tr=document.createElement('tr');
+    let pc='';
+    PLAYERS.forEach(p=>{
+      const pd=m.players[p];
+      if(!pd||!pd.joined){pc+=`<td style="color:var(--text2);">—</td>`;return;}
+      const rank=m.joinedRanks?m.joinedRanks[p]:'?';
+      const rc=rank===1?'rank-1':rank===2?'rank-2':rank===3?'rank-3':'';
+      pc+=`<td>
+        <div style="font-size:11px;color:var(--blue);">✅</div>
+        <div class="${pd.paid?'paid-yes':'paid-no'}" style="font-size:11px;">${pd.paid?'💰':'❌'}</div>
+        <div style="font-size:12px;font-weight:700;">${parseFloat(pd.points).toFixed(2)}</div>
+        <div class="${rc}" style="font-size:11px;">#${rank}</div>
+      </td>`;
+    });
+    const isW=m.fantasyWinner&&m.fantasyWinner!=='';
+    tr.innerHTML=`
+      <td><span class="match-no-badge">#${m.matchno}</span></td>
+      <td style="font-size:12px;">${formatDate(m.date)}</td>
+      <td><span class="team-tag">${m.teams}</span></td>
+      <td style="font-size:12px;font-weight:700;">${m.teamwon||'—'}</td>
+      <td>${m.contest==='yes'?'<span class="won-badge">YES</span>':'<span class="lost-badge">NO</span>'}</td>
+      <td>${m.contest==='yes'?m.joinedCount+'/'+PLAYERS.length:'—'}</td>
+      <td>₹${m.fee}</td>
+      <td style="color:var(--green);font-weight:700;">₹${m.pool}</td>
+      <td>${isW?`<span style="color:var(--accent);font-weight:700;">${m.fantasyWinner}</span>`:'—'}</td>
+      <td>${isW?`<span style="color:var(--green);font-weight:700;">₹${m.winningPerWinner.toFixed(2)}</span>`:'—'}</td>
+      <td>${m.contest==='yes'&&isW?(m.transferred?'<span class="transfer-done">✅ Done</span>':'<span class="transfer-pending">⏳ Pending</span>'):'—'}</td>
+      ${pc}`;
+    tbody.appendChild(tr);
+  });
+  renderTotals();
+}
+
+function renderTotals(){
+  const bar=document.getElementById('totals-bar');
+  const totalPool=matches.reduce((s,m)=>s+m.pool,0);
+  bar.innerHTML=`
+    <div class="total-chip"><div class="total-chip-label">Total Matches</div><div class="total-chip-val">${matches.length}</div></div>
+    <div class="total-chip"><div class="total-chip-label">Contests Played</div><div class="total-chip-val">${matches.filter(m=>m.contest==='yes').length}</div></div>
+    <div class="total-chip"><div class="total-chip-label">Total Pool</div><div class="total-chip-val">₹${totalPool}</div></div>
+    <div class="total-chip"><div class="total-chip-label">Payouts Done</div><div class="total-chip-val">${matches.filter(m=>m.transferred).length}</div></div>`;
+}
+
+function computePlayerStats(){
+  let stats={};
+  PLAYERS.forEach(p=>{stats[p]={matchesPlayed:0,contested:0,paidContests:0,wins:0,totalInvested:0,totalWon:0,bestPoints:0,carryFwd:0};});
+  let cf={};PLAYERS.forEach(p=>{cf[p]=0;});
+  matches.forEach(m=>{
+    PLAYERS.forEach(p=>{
+      const pd=m.players[p];
+      if(!pd||!pd.joined) return;
+      const s=stats[p];
+      s.matchesPlayed++;
+      if(m.contest==='yes'){
+        s.contested++;
+        if(pd.paid){s.paidContests++;if(cf[p]<=0)s.totalInvested+=m.fee;else cf[p]-=m.fee;}
+        if(pd.points>s.bestPoints) s.bestPoints=pd.points;
+        if(m.tiedWinners&&m.tiedWinners.includes(p)&&m.pool>0){
+          s.wins++;const won=m.winningPerWinner||0;
+          if(m.transferred)s.totalWon+=won;else cf[p]+=won;
+        }
+      }
+    });
+  });
+  PLAYERS.forEach(p=>{stats[p].carryFwd=cf[p]>0?cf[p]:0;});
+  return stats;
+}
+
+function renderPlayerStats(){
+  const wrap=document.getElementById('player-cards-wrap');wrap.innerHTML='';
+  const stats=computePlayerStats();
+  PLAYERS.forEach((p,i)=>{
+    const s=stats[p];const profit=s.totalWon-s.totalInvested;
+    const winpct=s.paidContests>0?((s.wins/s.paidContests)*100).toFixed(1):'0.0';
+    const div=document.createElement('div');div.className='p-card';
+    div.innerHTML=`
+      <div class="p-card-header">
+        <div class="p-avatar" style="border-color:${COLORS[i]};color:${COLORS[i]};background:${COLORS[i]}22;">${p[0]}</div>
+        <div><div class="p-name">${p}</div><div class="p-winpct">Win Rate: <span>${winpct}%</span> (${s.wins}/${s.paidContests})</div></div>
+      </div>
+      <div class="p-card-body">
+        <div class="p-stat-row"><span class="p-stat-label">Matches Played</span><span class="p-stat-val accent">${s.matchesPlayed}</span></div>
+        <div class="p-stat-row"><span class="p-stat-label">Contests Joined</span><span class="p-stat-val">${s.contested}</span></div>
+        <div class="p-stat-row"><span class="p-stat-label">Paid Contests</span><span class="p-stat-val">${s.paidContests}</span></div>
+        <div class="p-stat-row"><span class="p-stat-label">Matches Won</span><span class="p-stat-val" style="color:${COLORS[i]};">${s.wins}</span></div>
+        <div class="p-stat-row"><span class="p-stat-label">Total Invested</span><span class="p-stat-val red">₹${s.totalInvested}</span></div>
+        <div class="p-stat-row"><span class="p-stat-label">Total Winnings</span><span class="p-stat-val green">₹${s.totalWon.toFixed(2)}</span></div>
+        <div class="p-stat-row"><span class="p-stat-label">Profit / Loss</span><span class="p-stat-val ${profit>=0?'green':'red'}">${profit>=0?'+':''}₹${profit.toFixed(2)}</span></div>
+        <div class="p-stat-row"><span class="p-stat-label">Best Points</span><span class="p-stat-val accent">${parseFloat(s.bestPoints).toFixed(2)}</span></div>
+        ${s.carryFwd>0?`<div class="p-stat-row"><span class="p-stat-label">Carry Forward</span><span class="p-stat-val"><span class="cf-tag">₹${s.carryFwd.toFixed(2)} pending</span></span></div>`:''}
+      </div>`;
+    wrap.appendChild(div);
+  });
+}
+
+function renderLeaderboard(){
+  const grid=document.getElementById('lb-grid');grid.innerHTML='';
+  const stats=computePlayerStats();
+  const sorted=PLAYERS.map((p,i)=>({name:p,color:COLORS[i],...stats[p]})).sort((a,b)=>(b.totalWon-b.totalInvested)-(a.totalWon-a.totalInvested));
+  sorted.forEach((p,i)=>{
+    const profit=p.totalWon-p.totalInvested;
+    const winpct=p.paidContests>0?((p.wins/p.paidContests)*100).toFixed(1):'0.0';
+    const rc=i===0?'rank1':i===1?'rank2':i===2?'rank3':'';
+    const medals=['🥇','🥈','🥉'];
+    const div=document.createElement('div');div.className=`lb-card ${rc}`;
+    div.innerHTML=`
+      <div class="lb-rank">${medals[i]||i+1}</div>
+      <div>
+        <div class="lb-name" style="color:${p.color};">${p.name}</div>
+        <div class="lb-stats">
+          <div class="lb-stat">Matches: <span>${p.matchesPlayed}</span></div>
+          <div class="lb-stat">Paid: <span>${p.paidContests}</span></div>
+          <div class="lb-stat">Wins: <span>${p.wins}</span></div>
+          <div class="lb-stat">Win%: <span>${winpct}%</span></div>
+          <div class="lb-stat">Invested: <span>₹${p.totalInvested}</span></div>
+          <div class="lb-stat">Won: <span>₹${p.totalWon.toFixed(2)}</span></div>
+          ${p.carryFwd>0?`<div class="lb-stat">Carry Fwd: <span class="cf-tag">₹${p.carryFwd.toFixed(2)}</span></div>`:''}
+        </div>
+      </div>
+      <div>
+        <div class="lb-profit ${profit>0?'pos':profit<0?'neg':'neu'}">${profit>=0?'+':''}₹${profit.toFixed(2)}</div>
+        <div class="lb-wins">${p.wins} win${p.wins!==1?'s':''}</div>
+      </div>`;
+    grid.appendChild(div);
+  });
+}
+
+function renderGraphs(){
+  const stats=computePlayerStats();
+  Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});charts={};
+  const labels=matches.map(m=>`M${m.matchno}`);
+  const pnlDs=PLAYERS.map((p,i)=>{
+    let cum=0;
+    const data=matches.map(m=>{
+      const pd=m.players[p];
+      if(!pd||!pd.joined) return cum;
+      if(m.contest==='yes'){if(pd.paid)cum-=m.fee;if(m.tiedWinners&&m.tiedWinners.includes(p)&&m.transferred)cum+=m.winningPerWinner||0;}
+      return parseFloat(cum.toFixed(2));
+    });
+    return{label:p,data,borderColor:COLORS[i],backgroundColor:COLORS[i]+'22',fill:false,tension:0.3,pointRadius:5,pointHoverRadius:7,borderWidth:2};
+  });
+  charts.pnl=new Chart(document.getElementById('chart-pnl'),{type:'line',data:{labels,datasets:pnlDs},options:chartOpts('₹')});
+  charts.invwin=new Chart(document.getElementById('chart-inv-win'),{type:'bar',data:{labels:PLAYERS,datasets:[
+    {label:'Invested',data:PLAYERS.map(p=>stats[p].totalInvested),backgroundColor:COLORS.map(c=>c+'99'),borderColor:COLORS,borderWidth:1},
+    {label:'Won',data:PLAYERS.map(p=>parseFloat(stats[p].totalWon.toFixed(2))),backgroundColor:COLORS.map(c=>c+'44'),borderColor:COLORS,borderWidth:2}
+  ]},options:chartOpts('₹')});
+  charts.wins=new Chart(document.getElementById('chart-wins'),{type:'doughnut',data:{labels:PLAYERS,datasets:[{data:PLAYERS.map(p=>stats[p].wins),backgroundColor:COLORS,borderColor:'#1b2540',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8899bb',font:{family:'Rajdhani',size:13}}}}}});
+  charts.points=new Chart(document.getElementById('chart-points'),{type:'line',data:{labels,datasets:PLAYERS.map((p,i)=>({label:p,data:matches.map(m=>m.players[p]&&m.players[p].joined?m.players[p].points:null),borderColor:COLORS[i],backgroundColor:COLORS[i]+'33',spanGaps:false,tension:0.3,pointRadius:5,borderWidth:2}))},options:chartOpts('pts')});
+  charts.winpct=new Chart(document.getElementById('chart-winpct'),{type:'polarArea',data:{labels:PLAYERS,datasets:[{data:PLAYERS.map(p=>stats[p].paidContests>0?parseFloat(((stats[p].wins/stats[p].paidContests)*100).toFixed(1)):0),backgroundColor:COLORS.map(c=>c+'99'),borderColor:COLORS,borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8899bb',font:{family:'Rajdhani',size:12}}}},scales:{r:{ticks:{color:'#8899bb'},grid:{color:'#1e2d50'}}}}});
+  charts.pool=new Chart(document.getElementById('chart-pool'),{type:'bar',data:{labels,datasets:[{label:'Pool (₹)',data:matches.map(m=>m.pool),backgroundColor:matches.map(m=>m.pool>0?'rgba(245,166,35,0.5)':'rgba(100,100,100,0.3)'),borderColor:matches.map(m=>m.pool>0?'#f5a623':'#555'),borderWidth:1}]},options:chartOpts('₹')});
+}
+
+function chartOpts(unit){
+  return{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#8899bb',font:{family:'Rajdhani',size:12}}},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${unit}${ctx.parsed.y??ctx.parsed}`}}},
+    scales:{x:{ticks:{color:'#8899bb',font:{family:'Rajdhani',size:11}},grid:{color:'#1e2d5044'}},y:{ticks:{color:'#8899bb',font:{family:'Rajdhani',size:11},callback:v=>`${unit}${v}`},grid:{color:'#1e2d5044'}}}};
+}
+
+function formatDate(d){
+  if(!d) return '—';
+  return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});
+}
+
+// Init
+loadData();
+renderMatchLog();
+</script>
+</body>
+</html>
