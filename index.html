@@ -325,7 +325,7 @@ function processCloudData(data){
     // Re-render current section
     refreshCurrentSection(true);
     const updatedAt = data.updatedAt ? new Date(data.updatedAt).toLocaleTimeString('en-IN') : new Date().toLocaleTimeString('en-IN');
-    updateLiveUI('live','🟢 LIVE', `Updated: ${updatedAt} · Auto-refresh every 30s`);
+    updateLiveUI('live','🟢 LIVE', `Updated: ${updatedAt} · Click Refresh for latest scores`);
   } else {
     updateLiveUI('live','🟢 LIVE', `No changes · Last check: ${new Date().toLocaleTimeString('en-IN')}`);
   }
@@ -581,7 +581,7 @@ function formatDate(d){
   setInterval(updateClock, 1000);
   if(checkConfig()){
     fetchFromCloud();
-    startPolling();
+    // startPolling();
   }
 })();
 </script>
