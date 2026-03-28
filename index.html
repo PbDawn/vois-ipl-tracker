@@ -172,7 +172,10 @@ tr:hover td{background:rgba(245,166,35,0.04);}
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <span class="ticker-time" id="ticker-time"></span>
-    <button class="refresh-btn" onclick="fetchFromCloud()">⟳ Refresh</button>
+    <div style="display:flex; flex-direction:column; align-items:flex-end;">
+      <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()">⟳ Refresh</button>
+      <span style="font-size:9px; color:var(--text2); margin-top:3px;" id="refresh-counter">100 left today</span>
+    </div>
   </div>
 </div>
 
@@ -282,6 +285,62 @@ function checkConfig(){
     return false;
   }
   return true;
+}
+
+// ===================== RATE LIMITING =====================
+const DAILY_LIMIT = 20;
+let isCooldown = false;
+
+function getRefreshStats() {
+  const today = new Date().toISOString().split('T')[0];
+  let stats = JSON.parse(localStorage.getItem('vois_refresh_stats') || '{}');
+  if (stats.date !== today) {
+    stats = { date: today, count: 0 }; // Reset for a new day
+  }
+  return stats;
+}
+
+function updateRefreshUI() {
+  const stats = getRefreshStats();
+  const left = Math.max(0, DAILY_LIMIT - stats.count);
+  const counterEl = document.getElementById('refresh-counter');
+  if(counterEl) counterEl.textContent = `${left} left today`;
+}
+
+function manualRefresh() {
+  const stats = getRefreshStats();
+  
+  // 1. Check Daily Limit
+  if (stats.count >= DAILY_LIMIT) {
+    alert("⚠️ Daily refresh limit reached to save cloud bandwidth! Please check back tomorrow.");
+    return;
+  }
+
+  // 2. Check Cooldown Spam
+  if (isCooldown) {
+    alert("⏳ Please wait 30 seconds between refreshes.");
+    return;
+  }
+
+  // 3. Process the Refresh
+  stats.count++;
+  localStorage.setItem('vois_refresh_stats', JSON.stringify(stats));
+  updateRefreshUI();
+
+  // 4. Start Cooldown
+  isCooldown = true;
+  const btn = document.getElementById('refresh-btn');
+  btn.style.opacity = '0.5';
+  btn.textContent = '⏳ Wait...';
+  
+  setTimeout(() => {
+    isCooldown = false;
+    btn.style.opacity = '1';
+    btn.textContent = '⟳ Refresh';
+  }, 30000); // 30 seconds cooldown
+
+  // 5. Actually fetch the data
+  fetchFromCloud();
 }
 
 // ===================== CLOUD FETCH =====================
@@ -578,6 +637,7 @@ function formatDate(d){
 // ===================== INIT =====================
 (function init(){
   updateClock();
+  updateRefreshUI();
   setInterval(updateClock, 1000);
   if(checkConfig()){
     fetchFromCloud();
