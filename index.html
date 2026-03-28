@@ -151,10 +151,54 @@ tr:hover td{background:rgba(245,166,35,0.04);}
 /* NEW DATA FLASH */
 .flash-new{animation:flashNew 1.5s ease;}
 @keyframes flashNew{0%{background:rgba(46,204,113,0.15);}100%{background:transparent;}}
+
+/* BACKGROUND WATERMARK */
+.watermark {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(80px, 15vw, 200px);
+  color: rgba(255, 255, 255, 0.02); /* Very low opacity */
+  z-index: 0; /* Sits behind your content */
+  pointer-events: none; /* Prevents it from blocking clicks */
+  filter: blur(3px); /* Blurred effect */
+  white-space: nowrap;
+  user-select: none; /* Prevents text highlighting */
+}
+
+/* STICKY FOOTER */
+body {
+  padding-bottom: 40px; /* Prevents content from hiding behind the footer */
+}
+.pb-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(10, 15, 30, 0.90);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(5px);
+  color: var(--text2);
+  text-align: center;
+  padding: 8px 10px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px;
+  letter-spacing: 2px;
+  z-index: 900;
+}
+.pb-footer span {
+  color: var(--accent);
+  font-weight: 700;
+}
+
 </style>
 </head>
 <body>
 
+<div class="watermark">#PbDawn</div>
+  
 <!-- LOADING OVERLAY -->
 <div class="loading-overlay" id="loading-overlay">
   <div class="spinner"></div>
@@ -645,5 +689,10 @@ function formatDate(d){
   }
 })();
 </script>
+
+<div class="pb-footer">
+  &copy;&trade; Designed and Developed by <span>Prabhat Singh</span>
+</div>
+
 </body>
 </html>
