@@ -60,6 +60,6 @@ window.IPL_MATCH_DATA = [
       "Nilesh": 6,
       "Ashish": 7
     },
-    "transferred": false
+    "transferred": true
   }
 ];
