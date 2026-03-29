@@ -586,7 +586,6 @@ function renderTotals(){
 }
 
 // ===================== PLAYER STATS =====================
-// ===================== PLAYER STATS =====================
 function renderPlayerStats(){
   const wrap = document.getElementById('player-cards-wrap');
   wrap.innerHTML='';
@@ -600,21 +599,21 @@ function renderPlayerStats(){
     const div = document.createElement('div');
     div.className = 'p-card';
     
-    // 1. Build the Avatar HTML safely using a standard if/else statement
+    // 1. Build the Avatar HTML safely 
     let avatarHtml = '';
-    if (PLAYER_IMAGES[p]) {
-      avatarHtml = `<div class="p-avatar" style="border-color:${COLORS[i]}; background-image:url('${PLAYER_IMAGES[p]}'); background-size:cover; background-position:center; color:transparent;">${p[0]}</div>`;
+    if (typeof PLAYER_IMAGES !== 'undefined' && PLAYER_IMAGES[p]) {
+      avatarHtml = `<div class="p-avatar" style="border-color:${COLORS[i]}; background-image:url('${PLAYER_IMAGES[p]}'); background-size:cover; background-position:center; color:transparent; display:flex; flex-shrink:0; justify-content:center; align-items:center;">${p[0]}</div>`;
     } else {
-      avatarHtml = `<div class="p-avatar" style="border-color:${COLORS[i]};color:${COLORS[i]};background:${COLORS[i]}22;">${p[0]}</div>`;
+      avatarHtml = `<div class="p-avatar" style="border-color:${COLORS[i]};color:${COLORS[i]};background:${COLORS[i]}22; display:flex; flex-shrink:0; justify-content:center; align-items:center;">${p[0]}</div>`;
     }
 
-    // 2. Insert the HTML structure with the proper p-card-header wrapper intact
+    // 2. Insert HTML with FOOLPROOF INLINE FLEXBOX STYLING
     div.innerHTML = `
-      <div class="p-card-header">
+      <div style="display:flex; align-items:center; gap:14px; padding:16px 18px; background:linear-gradient(135deg, var(--bg3), var(--card2)); border-bottom:1px solid var(--border);">
         ${avatarHtml}
-        <div>
-          <div class="p-name">${p}</div>
-          <div class="p-winpct">Win Rate: <span>${winpct}%</span> (${s.wins}/${s.paidContests} paid)</div>
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          <div class="p-name" style="margin:0; line-height:1;">${p}</div>
+          <div class="p-winpct" style="margin:0; line-height:1;">Win Rate: <span>${winpct}%</span> (${s.wins}/${s.paidContests} paid)</div>
         </div>
       </div>
       <div class="p-card-body">
