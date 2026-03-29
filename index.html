@@ -576,16 +576,6 @@ function renderMatchLog(flash){
     const tr = document.createElement('tr');
     if(flash) tr.classList.add('flash-new');
     // 2. Calculate highest points ONLY if match is complete
-    let maxPaidPoints = -1;
-    if (matchIsComplete) {
-      PLAYERS.forEach(p => {
-        const pd = m.players[p];
-        if (pd && pd.joined && pd.paid) {
-          const pts = parseFloat(pd.points) || 0;
-          if (pts > maxPaidPoints) maxPaidPoints = pts;
-        }
-      });
-    }
 
    let playerCells='';
     PLAYERS.forEach(p=>{
