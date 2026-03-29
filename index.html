@@ -240,6 +240,27 @@ body {
   background: rgba(245, 166, 35, 0.25);
   border-color: var(--accent);
 }
+
+.pay-now-btn {
+  display: block;
+  margin: 4px auto 0;
+  padding: 4px 8px;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  text-transform: uppercase;
+  animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+  0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+}
   
 </style>
 </head>
@@ -564,38 +585,35 @@ function renderMatchLog(flash){
       }
     });
 
-    let playerCells='';
+   let playerCells='';
     PLAYERS.forEach(p=>{
       const pd=m.players[p];
       if(!pd||!pd.joined){
         playerCells+=`<td style="color:var(--text2);font-size:13px;">—</td>`;
       } else {
         const rank = m.joinedRanks ? m.joinedRanks[p] : '?';
-        const pts = parseFloat(pd.points) || 0;
+        const pts = parseFloat(pd.points).toFixed(2);
+        const isRank1 = (pd.paid && rank === 1); // Only highlight Rank 1 if they PAID
         
-        // 2. Apply the highlight box ONLY if they PAID and match the top paid score
-        const isHighestPaid = (pd.paid && pts === maxPaidPoints && maxPaidPoints > 0);
+        // Build the PAY NOW button if unpaid
+        const payBtn = !pd.paid ? `<button class="pay-now-btn" onclick="showPaymentAlert()">💸 Pay Now</button>` : '';
         
-        // Keep standard text colors for everyone
-        const rankClass = rank === 1 ? 'rank-1' : rank===2 ? 'rank-2' : rank===3 ? 'rank-3' : '';
-        
-        if (isHighestPaid) {
+        if (isRank1) {
           playerCells+=`<td>
             <div class="rank-1-box">
-              <div style="font-size:12px; font-weight:900;" class="joined-yes">✅</div>
-              <div class="${pd.paid?'paid-yes':'paid-no'}" style="font-size:12px; font-weight:900;">${pd.paid?'💰':'❌'}</div>
-              <div style="font-size:15px; font-weight:900; color:var(--accent);">${parseFloat(pd.points).toFixed(2)}</div>
-              <div class="${rankClass}" style="font-size:13px; font-weight:900;">#${rank}</div>
+              <div style="font-size:11px;" class="joined-yes">✅ Joined</div>
+              <div class="paid-yes" style="font-size:11px;">💰 Paid</div>
+              <div style="font-size:15px; font-weight:900; color:var(--accent);">${pts}</div>
+              <div class="rank-1" style="font-size:13px; font-weight:900;">#${rank}</div>
             </div>
           </td>`;
         } else {
-          // Standard layout for everyone else
           playerCells+=`<td>
-            <div style="font-size:11px;" class="joined-yes">✅</div>
-            <div class="${pd.paid?'paid-yes':'paid-no'}" style="font-size:11px;">${pd.paid?'💰':'❌'}</div>
-            <div style="font-size:12px; font-weight:700;">${parseFloat(pd.points).toFixed(2)}</div>
-            <div class="${rankClass}" style="font-size:11px;">#${rank}</div>
-          </td>`;
+            <div style="font-size:11px;" class="joined-yes">✅ Joined</div>
+            <div class="${pd.paid?'paid-yes':'paid-no'}" style="font-size:11px;">${pd.paid?'💰 Paid':'❌ Unpaid'}</div>
+            <div style="font-size:12px; font-weight:700;">${pts}</div>
+            <div class="${rank === 1 ? 'rank-1' : rank===2 ? 'rank-2' : rank===3 ? 'rank-3' : ''}" style="font-size:11px;">#${rank}</div>
+            ${payBtn} </td>`;
         }
       }
     });
@@ -808,6 +826,16 @@ function formatDate(d){
   if(!d) return '—';
   const dt=new Date(d);
   return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});
+}
+
+function showPaymentAlert() {
+  const message = `🏏 IPL Season is On! 🏆\n\n` +
+    `It looks like your entry fee is still pending. To keep the game fair and fun, please complete your payment! \n\n` +
+    `📍 Where to Pay:\nCheck the pinned message in our WhatsApp group: "_VOIS Dream 11". \n\n` +
+    `📸 Payment Method:\nSimply scan the UPI QR code available there and complete the transfer. \n\n` +
+    `Good luck with the match! See you on the leaderboard! 🔥`;
+  
+  alert(message);
 }
 
 // ===================== INIT =====================
