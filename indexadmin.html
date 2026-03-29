@@ -722,7 +722,8 @@ function renderMatchLog(){
         </td>`;
       }
     });
-    const isWinner = m.fantasyWinner&&m.fantasyWinner!=='';
+    const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
+    const isWinner = matchIsComplete && m.fantasyWinner && m.fantasyWinner !== '';
     const appLinkHtml = m.contestLink 
       ? `<a href="${m.contestLink}" target="_blank" class="app-link-btn">🏆 App</a>` 
       : `-`;
