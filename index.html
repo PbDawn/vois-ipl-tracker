@@ -572,67 +572,82 @@ function renderMatchLog(flash){
   if(matches.length===0){msg.style.display='block';renderTotals();return;}
   msg.style.display='none';
 
-  matches.forEach((m,idx)=>{
+  matches.forEach((m, idx) => {
     const tr = document.createElement('tr');
-    if(flash) tr.classList.add('flash-new');
-    // 2. Calculate highest points ONLY if match is complete
+    if (flash) tr.classList.add('flash-new');
 
-   let playerCells='';
-    PLAYERS.forEach(p=>{
-      const pd=m.players[p];
-      if(!pd||!pd.joined){
-        playerCells+=`<td style="color:var(--text2);font-size:13px;">—</td>`;
+    // 1. Check if the match is officially finished
+    const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
+
+    // 2. Calculate highest points ONLY if match is complete AND points exist
+    let maxPaidPoints = -1;
+    if (matchIsComplete) {
+      PLAYERS.forEach(p => {
+        const pd = m.players[p];
+        if (pd && pd.joined && pd.paid) {
+          const pts = parseFloat(pd.points) || 0;
+          if (pts > maxPaidPoints) maxPaidPoints = pts;
+        }
+      });
+    }
+
+    let playerCells = '';
+    PLAYERS.forEach(p => {
+      const pd = m.players[p];
+      if (!pd || !pd.joined) {
+        playerCells += `<td style="color:var(--text2);font-size:13px;">—</td>`;
       } else {
         const rank = m.joinedRanks ? m.joinedRanks[p] : '?';
-        const pts = parseFloat(pd.points).toFixed(2);
-        const isRank1 = (pd.paid && rank === 1); // Only highlight Rank 1 if they PAID
+        const ptsValue = parseFloat(pd.points) || 0;
+        const ptsDisplay = ptsValue.toFixed(2);
         
-        // Build the PAY NOW button if unpaid
+        // 3. CORRECTED HIGHLIGHT RULE:
+        // Must be Complete AND Paid AND have points GREATER than 0 AND be the max
+        const isHighestPaid = matchIsComplete && 
+                              pd.paid && 
+                              ptsValue > 0 && 
+                              ptsValue === maxPaidPoints;
+
+        const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
         const payBtn = !pd.paid ? `<button class="pay-now-btn" onclick="showPaymentAlert()">💸 Pay Now</button>` : '';
-        
-        if (isRank1) {
-          playerCells+=`<td>
+
+        if (isHighestPaid) {
+          playerCells += `<td>
             <div class="rank-1-box">
               <div style="font-size:11px;" class="joined-yes">✅ Joined</div>
               <div class="paid-yes" style="font-size:11px;">💰 Paid</div>
-              <div style="font-size:15px; font-weight:900; color:var(--accent);">${pts}</div>
+              <div style="font-size:15px; font-weight:900; color:var(--accent);">${ptsDisplay}</div>
               <div class="rank-1" style="font-size:13px; font-weight:900;">#${rank}</div>
             </div>
           </td>`;
         } else {
-          playerCells+=`<td>
+          playerCells += `<td>
             <div style="font-size:11px;" class="joined-yes">✅ Joined</div>
-            <div class="${pd.paid?'paid-yes':'paid-no'}" style="font-size:11px;">${pd.paid?'💰 Paid':'❌ Unpaid'}</div>
-            <div style="font-size:12px; font-weight:700;">${pts}</div>
-            <div class="${rank === 1 ? 'rank-1' : rank===2 ? 'rank-2' : rank===3 ? 'rank-3' : ''}" style="font-size:11px;">#${rank}</div>
-            ${payBtn} </td>`;
+            <div class="${pd.paid ? 'paid-yes' : 'paid-no'}" style="font-size:11px;">${pd.paid ? '💰 Paid' : '❌ Unpaid'}</div>
+            <div style="font-size:12px; font-weight:700;">${ptsDisplay}</div>
+            <div class="${rankClass}" style="font-size:11px;">#${rank}</div>
+            ${payBtn}
+          </td>`;
         }
       }
     });
-    // Only declare a winner IF the real-life 'Team Won' field is filled out
-    const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
+
     const isWinner = matchIsComplete && m.fantasyWinner && m.fantasyWinner !== '';
-    // 1. Safely calculate the button HTML
-   /* const appLinkHtml = m.contestLink 
-      ? `<a href="${m.contestLink}" target="_blank" class="app-link-btn">🏏 Click to View MyCircle11 Points</a>` 
-      : `-`; */
-    tr.innerHTML=`
-      <td>
-        <span class="match-no-badge">#${m.matchno}</span>
-      </td>
+
+    tr.innerHTML = `
+      <td><span class="match-no-badge">#${m.matchno}</span></td>
       <td style="font-size:12px;">${formatDate(m.date)}</td>
       <td><span class="team-tag">${m.teams}</span></td>
-      <td style="font-size:12px;font-weight:700;">${m.teamwon||'—'}</td>
-      <td>${m.contest==='yes'?'<span class="won-badge">YES</span>':'<span class="lost-badge">NO</span>'}</td>
-      <td>${m.contest==='yes'?m.joinedCount+'/'+PLAYERS.length:'—'}</td>
+      <td style="font-size:12px;font-weight:700;">${m.teamwon || '—'}</td>
+      <td>${m.contest === 'yes' ? '<span class="won-badge">YES</span>' : '<span class="lost-badge">NO</span>'}</td>
+      <td>${m.contest === 'yes' ? m.joinedCount + '/' + PLAYERS.length : '—'}</td>
       <td>₹${m.fee}</td>
       <td style="color:var(--green);font-weight:700;">₹${m.pool}</td>
-      <td>${isWinner?`<span style="color:var(--accent);font-weight:700;">${m.fantasyWinner}</span>`:'—'}</td>
-      <td>${isWinner?`<span style="color:var(--green);font-weight:700;">₹${m.winningPerWinner.toFixed(2)}</span>`:'—'}</td>
-      <td>${m.contest==='yes'&&isWinner?
-        (m.transferred?'<span class="transfer-done">✅ Done</span>':'<span class="transfer-pending">⏳ Pending</span>')
-        :'—'}</td>
+      <td>${isWinner ? `<span style="color:var(--accent);font-weight:700;">${m.fantasyWinner}</span>` : '—'}</td>
+      <td>${isWinner ? `<span style="color:var(--green);font-weight:700;">₹${m.winningPerWinner.toFixed(2)}</span>` : '—'}</td>
+      <td>${m.contest === 'yes' && isWinner ? (m.transferred ? '<span class="transfer-done">✅ Done</span>' : '<span class="transfer-pending">⏳ Pending</span>') : '—'}</td>
       ${playerCells}`;
+
     tbody.appendChild(tr);
   });
   renderTotals();
