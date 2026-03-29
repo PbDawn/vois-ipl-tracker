@@ -674,18 +674,35 @@ function computePlayerStats(){
 
 // ===================== LEADERBOARD =====================
 function renderLeaderboard(){
-  const grid=document.getElementById('lb-grid');grid.innerHTML='';
-  const stats=computePlayerStats();
-  const sorted=PLAYERS.map((p,i)=>({name:p,color:COLORS[i],...stats[p]}))
+  const grid = document.getElementById('lb-grid');
+  grid.innerHTML = '';
+  const stats = computePlayerStats();
+  
+  // 1. Sort the players by Profit (Highest to Lowest)
+  const sorted = PLAYERS.map((p,i)=>({name:p, color:COLORS[i], ...stats[p]}))
     .sort((a,b)=>(b.totalWon-b.totalInvested)-(a.totalWon-a.totalInvested));
-  sorted.forEach((p,i)=>{
-    const profit=p.totalWon-p.totalInvested;
-    const winpct=p.paidContests>0?((p.wins/p.paidContests)*100).toFixed(1):'0.0';
-    const rankClass=i===0?'rank1':i===1?'rank2':i===2?'rank3':'';
-    const medals=['🥇','🥈','🥉'];
-    const div=document.createElement('div');div.className=`lb-card ${rankClass}`;
-    div.innerHTML=`
-      <div class="lb-rank">${medals[i]||i+1}</div>
+
+  // 2. Track the actual rank to handle ties properly
+  let currentRank = 1;
+  let lastProfit = null;
+
+  sorted.forEach((p, i) => {
+    const profit = p.totalWon - p.totalInvested;
+    const winpct = p.paidContests > 0 ? ((p.wins / p.paidContests) * 100).toFixed(1) : '0.0';
+    
+    // 3. If this player has less profit than the previous player, increase the rank
+    if (lastProfit !== null && profit < lastProfit) {
+      currentRank++;
+    }
+
+    // 4. Assign medals and CSS classes based on true rank (not loop index)
+    const rankClass = currentRank === 1 ? 'rank1' : currentRank === 2 ? 'rank2' : currentRank === 3 ? 'rank3' : '';
+    const rankDisplay = currentRank === 1 ? '🥇' : currentRank === 2 ? '🥈' : currentRank === 3 ? '🥉' : currentRank;
+    
+    const div = document.createElement('div');
+    div.className = `lb-card ${rankClass}`;
+    div.innerHTML = `
+      <div class="lb-rank">${rankDisplay}</div>
       <div>
         <div class="lb-name" style="color:${p.color};">${p.name}</div>
         <div class="lb-stats">
@@ -695,17 +712,21 @@ function renderLeaderboard(){
           <div class="lb-stat">Win%: <span>${winpct}%</span></div>
           <div class="lb-stat">Invested: <span>₹${p.totalInvested}</span></div>
           <div class="lb-stat">Won: <span>₹${p.totalWon.toFixed(2)}</span></div>
-          ${p.carryFwd>0?`<div class="lb-stat">Carry Fwd: <span class="cf-tag">₹${p.carryFwd.toFixed(2)}</span></div>`:''}
+          ${p.carryFwd > 0 ? `<div class="lb-stat">Carry Fwd: <span class="cf-tag">₹${p.carryFwd.toFixed(2)}</span></div>` : ''}
         </div>
       </div>
       <div>
-        <div class="lb-profit ${profit>0?'pos':profit<0?'neg':'neu'}">${profit>=0?'+':''}₹${profit.toFixed(2)}</div>
-        <div class="lb-wins">${p.wins} win${p.wins!==1?'s':''}</div>
+        <div class="lb-profit ${profit > 0 ? 'pos' : profit < 0 ? 'neg' : 'neu'}">${profit >= 0 ? '+' : ''}₹${profit.toFixed(2)}</div>
+        <div class="lb-wins">${p.wins} win${p.wins !== 1 ? 's' : ''}</div>
       </div>`;
+    
     grid.appendChild(div);
+    
+    // 5. Save this profit to compare against the next player
+    lastProfit = profit;
   });
 }
-
+  
 // ===================== GRAPHS =====================
 function renderGraphs(){
   const stats=computePlayerStats();destroyCharts();
