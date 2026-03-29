@@ -718,24 +718,50 @@ function renderPlayerStats(){
 
 function computePlayerStats(){
   let stats = {};
-  PLAYERS.forEach(p=>{stats[p]={matchesPlayed:0,contested:0,paidContests:0,wins:0,totalInvested:0,totalWon:0,bestPoints:0,carryFwd:0};});
-  let cf = {};PLAYERS.forEach(p=>{cf[p]=0;});
+  PLAYERS.forEach(p=>{
+    stats[p]={matchesPlayed:0,contested:0,paidContests:0,wins:0,totalInvested:0,totalWon:0,bestPoints:0,carryFwd:0};
+  });
+  
+  let cf = {};
+  PLAYERS.forEach(p=>{cf[p]=0;});
+
   matches.forEach(m=>{
+    // 1. GATEKEEPER: Skip calculation if the match is not officially over
+    // This prevents Match #2 (Live/Upcoming) from affecting the Leaderboard
+    const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
+    if (!matchIsComplete) return; 
+
     PLAYERS.forEach(p=>{
       const pd=m.players[p];
       if(!pd||!pd.joined) return;
-      const s=stats[p];s.matchesPlayed++;
+      
+      const s=stats[p];
+      s.matchesPlayed++; // Only increments if match is complete
+
       if(m.contest==='yes'){
         s.contested++;
-        if(pd.paid){s.paidContests++;if(cf[p]<=0) s.totalInvested+=m.fee;else cf[p]-=m.fee;}
-        if(pd.points>s.bestPoints) s.bestPoints=pd.points;
-        if(m.tiedWinners&&m.tiedWinners.includes(p)&&m.pool>0){
-          s.wins++;const won=m.winningPerWinner||0;
-          if(m.transferred) s.totalWon+=won;else cf[p]+=won;
+        // 2. Only count investment if they paid
+        if(pd.paid){
+          s.paidContests++;
+          if(cf[p]<=0) s.totalInvested+=m.fee;
+          else cf[p]-=m.fee;
+        }
+        
+        // 3. Update best points
+        const currentPts = parseFloat(pd.points) || 0;
+        if(currentPts > s.bestPoints) s.bestPoints = currentPts;
+        
+        // 4. Only count a WIN if the match is complete and they are in tiedWinners
+        if(m.tiedWinners && m.tiedWinners.includes(p) && m.pool > 0){
+          s.wins++;
+          const won = m.winningPerWinner || 0;
+          if(m.transferred) s.totalWon += won;
+          else cf[p] += won;
         }
       }
     });
   });
+
   PLAYERS.forEach(p=>{stats[p].carryFwd=cf[p]>0?cf[p]:0;});
   return stats;
 }
