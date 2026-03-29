@@ -219,6 +219,27 @@ body {
   align-items: center;
   gap: 3px;
 }
+
+/* MYCIRCLE11 APP LINK BUTTON */
+.app-link-btn {
+  display: inline-block;
+  margin-top: 6px;
+  background: rgba(245, 166, 35, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(245, 166, 35, 0.4);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-decoration: none;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+.app-link-btn:hover {
+  background: rgba(245, 166, 35, 0.25);
+  border-color: var(--accent);
+}
   
 </style>
 </head>
@@ -566,7 +587,10 @@ function renderMatchLog(flash){
     });
     const isWinner = m.fantasyWinner&&m.fantasyWinner!=='';
     tr.innerHTML=`
-      <td><span class="match-no-badge">#${m.matchno}</span></td>
+      <td>
+        <span class="match-no-badge">#${m.matchno}</span>
+        ${m.contestLink ? `<br><a href="${m.contestLink}" target="_blank" class="app-link-btn">🏆 App</a>` : ''}
+      </td>
       <td style="font-size:12px;">${formatDate(m.date)}</td>
       <td><span class="team-tag">${m.teams}</span></td>
       <td style="font-size:12px;font-weight:700;">${m.teamwon||'—'}</td>
