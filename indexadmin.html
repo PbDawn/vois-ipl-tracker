@@ -796,11 +796,22 @@ function renderMatchLog(){
 
 function renderTotals(){
   const bar = document.getElementById('totals-bar');
+  
+  // 1. Gatekeeper: Define what a "Finished Match" is
+  const finishedMatches = matches.filter(m => m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—');
+
   const totalMatches = matches.length;
-  const totalPool = matches.reduce((s,m)=>s+m.pool,0);
-  const totalContests = matches.filter(m=>m.contest==='yes').length;
-  const totalTransferred = matches.filter(m=>m.transferred).length;
-  bar.innerHTML=`
+  
+  // 2. Only sum pool for finished matches
+  const totalPool = finishedMatches.reduce((s, m) => s + (m.pool || 0), 0);
+  
+  // 3. Only count contests for finished matches
+  const totalContests = finishedMatches.filter(m => m.contest === 'yes').length;
+  
+  // 4. Only count Payouts if the match is finished AND transferred is exactly true or "Done"
+  const totalTransferred = finishedMatches.filter(m => m.transferred === true || m.transferred === 'Done').length;
+
+  bar.innerHTML = `
     <div class="total-chip"><div class="total-chip-label">Total Matches</div><div class="total-chip-val">${totalMatches}</div></div>
     <div class="total-chip"><div class="total-chip-label">Contests Played</div><div class="total-chip-val">${totalContests}</div></div>
     <div class="total-chip"><div class="total-chip-label">Total Pool</div><div class="total-chip-val">₹${totalPool}</div></div>
