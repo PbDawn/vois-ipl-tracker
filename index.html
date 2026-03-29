@@ -598,10 +598,9 @@ function renderPlayerStats(){
     div.className='p-card';
     div.innerHTML=`
       <div class="p-card-header">
-        ${PLAYER_IMAGES[p] 
-          ? `<div class="p-avatar" style="border-color:${COLORS[i]}; background-image:url('${PLAYER_IMAGES[p]}'); background-size:cover; background-position:center; color:transparent;">${p[0]}</div>`
-          : `<div class="p-avatar" style="border-color:${COLORS[i]};color:${COLORS[i]};background:${COLORS[i]}22;">${p[0]}</div>`
-        }
+       <div class="p-avatar" style="border-color:${COLORS[i]}; background-image:url('${PLAYER_IMAGES[p]}'); background-size:cover; background-position:center; color:transparent;">
+          ${p[0]}
+        </div>
         <div><div class="p-name">${p}</div>
           <div class="p-winpct">Win Rate: <span>${winpct}%</span> (${s.wins}/${s.paidContests} paid)</div>
         </div>
