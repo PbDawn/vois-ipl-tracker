@@ -707,93 +707,135 @@ function toggleTransfer(idx){
 }
 
 // ===================== RENDER MATCH LOG =====================
-function renderMatchLog(){
+function renderMatchLog(flash) {
   const tbody = document.getElementById('match-tbody');
   const msg = document.getElementById('no-match-msg');
-  tbody.innerHTML='';
+  tbody.innerHTML = '';
+  
   const thead = document.querySelector('#match-table thead tr');
-  thead.innerHTML='';
-  const fixedHeaders = ['Match','Date','Teams','Team Won','Contest','Joined','Fee(₹)','Pool(₹)','Fantasy Winner','Payout(₹)','Transferred'];
-  fixedHeaders.forEach(h=>{const th=document.createElement('th');th.textContent=h;thead.appendChild(th);});
-  PLAYERS.forEach(p=>{
-    const th=document.createElement('th');
-    th.innerHTML=`<div style="writing-mode:vertical-rl;transform:rotate(180deg);height:78px;font-size:10px;white-space:nowrap;">${p}<br><span style="color:var(--text2);font-size:9px;">J/P/Pts/Rk</span></div>`;
+  thead.innerHTML = '';
+
+  // 1. Create Fixed Headers
+  const fixedHeaders = ['Match', 'Date', 'Teams', 'Team Won', 'Contest', 'Joined', 'Fee(₹)', 'Pool(₹)', 'Fantasy Winner', 'Payout(₹)', 'Transferred'];
+  fixedHeaders.forEach(h => {
+    const th = document.createElement('th');
+    th.textContent = h;
     thead.appendChild(th);
   });
-  const actTh=document.createElement('th');actTh.textContent='Actions';thead.appendChild(actTh);
 
-  if(matches.length===0){msg.style.display='block';renderTotals();return;}
-  msg.style.display='none';
+  // 2. Create Player Headers (Vertical Text)
+  PLAYERS.forEach(p => {
+    const th = document.createElement('th');
+    th.innerHTML = `<div style="writing-mode:vertical-rl;transform:rotate(180deg);height:78px;font-size:10px;white-space:nowrap;">${p}<br><span style="color:var(--text2);font-size:9px;">J/P/Pts/Rk</span></div>`;
+    thead.appendChild(th);
+  });
 
-  matches.forEach((m,idx)=>{
+  // 3. Create Admin Headers (App & Actions)
+  const appTh = document.createElement('th'); appTh.textContent = 'App'; thead.appendChild(appTh);
+  const actTh = document.createElement('th'); actTh.textContent = 'Actions'; thead.appendChild(actTh);
+
+  if (matches.length === 0) {
+    msg.style.display = 'block';
+    renderTotals();
+    return;
+  }
+  msg.style.display = 'none';
+
+  matches.forEach((m, idx) => {
     const tr = document.createElement('tr');
-   let playerCells='';
-    PLAYERS.forEach(p=>{
-      const pd=m.players[p];
-      if(!pd||!pd.joined){
-        playerCells+=`<td style="color:var(--text2);font-size:13px;">—</td>`;
+    if (flash) tr.classList.add('flash-new');
+
+    // Logic: Is the match officially over?
+    const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
+    const isWinner = matchIsComplete && m.fantasyWinner && m.fantasyWinner !== '';
+
+    // Calculate Max Points for Highlight (Only if match is complete)
+    let maxPaidPoints = -1;
+    if (matchIsComplete) {
+      PLAYERS.forEach(p => {
+        const pd = m.players[p];
+        if (pd && pd.joined && pd.paid) {
+          const pts = parseFloat(pd.points) || 0;
+          if (pts > maxPaidPoints) maxPaidPoints = pts;
+        }
+      });
+    }
+
+    // Build Player Data Cells
+    let playerCells = '';
+    PLAYERS.forEach(p => {
+      const pd = m.players[p];
+      if (!pd || !pd.joined) {
+        playerCells += `<td style="color:var(--text2);font-size:13px;">—</td>`;
       } else {
         const rank = m.joinedRanks ? m.joinedRanks[p] : '?';
-        const pts = parseFloat(pd.points).toFixed(2);
-        const isRank1 = (pd.paid && rank === 1); // Only highlight Rank 1 if they PAID
+        const ptsValue = parseFloat(pd.points) || 0;
+        const ptsDisplay = ptsValue.toFixed(2);
         
-        // Build the PAY NOW button if unpaid
-        const payBtn = !pd.paid ? `<button class="pay-now-btn" onclick="showPaymentAlert()">💸 Pay Now</button>` : '';
+        // Highlight Rule: Complete + Paid + Top Score + Pts > 0
+        const isHighestPaid = matchIsComplete && pd.paid && ptsValue > 0 && ptsValue === maxPaidPoints;
+        const payBtn = !pd.paid ? `<button class="pay-now-btn" style="padding:2px 4px; font-size:8px;" onclick="showPaymentAlert()">💸 Pay Now</button>` : '';
         
-        if (isRank1) {
-          playerCells+=`<td>
+        const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
+
+        if (isHighestPaid) {
+          playerCells += `<td>
             <div class="rank-1-box">
-              <div style="font-size:11px;" class="joined-yes">✅ Joined</div>
-              <div class="paid-yes" style="font-size:11px;">💰 Paid</div>
-              <div style="font-size:15px; font-weight:900; color:var(--accent);">${pts}</div>
-              <div class="rank-1" style="font-size:13px; font-weight:900;">#${rank}</div>
+              <div style="font-size:9px;">✅ Joined</div>
+              <div class="paid-yes" style="font-size:9px;">💰 Paid</div>
+              <div style="font-size:14px; font-weight:900; color:var(--accent);">${ptsDisplay}</div>
+              <div class="rank-1" style="font-size:11px; font-weight:900;">#${rank}</div>
             </div>
           </td>`;
         } else {
-          playerCells+=`<td>
-            <div style="font-size:11px;" class="joined-yes">✅ Joined</div>
-            <div class="${pd.paid?'paid-yes':'paid-no'}" style="font-size:11px;">${pd.paid?'💰 Paid':'❌ Unpaid'}</div>
-            <div style="font-size:12px; font-weight:700;">${pts}</div>
-            <div class="${rank === 1 ? 'rank-1' : rank===2 ? 'rank-2' : rank===3 ? 'rank-3' : ''}" style="font-size:11px;">#${rank}</div>
-            ${payBtn} </td>`;
+          playerCells += `<td>
+            <div style="font-size:9px;">✅ Joined</div>
+            <div class="${pd.paid ? 'paid-yes' : 'paid-no'}" style="font-size:9px;">${pd.paid ? '💰 Paid' : '❌ Unpaid'}</div>
+            <div style="font-size:12px; font-weight:700;">${ptsDisplay}</div>
+            <div class="${rankClass}" style="font-size:10px;">#${rank}</div>
+            ${payBtn}
+          </td>`;
         }
       }
     });
-    const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
-    const isWinner = matchIsComplete && m.fantasyWinner && m.fantasyWinner !== '';
+
     const appLinkHtml = m.contestLink 
-      ? `<a href="${m.contestLink}" target="_blank" class="app-link-btn">🏆 App</a>` 
-      : `-`;
-    tr.innerHTML=`
-     <td>
-        <span class="match-no-badge">#${m.matchno}</span>
-      </td>
-      <td style="font-size:12px;">${formatDate(m.date)}</td>
+      ? `<a href="${m.contestLink}" target="_blank" class="app-link-btn" style="font-size:10px; padding:3px 6px;">🏆 App</a>` 
+      : `—`;
+
+    // Construct the Row
+    tr.innerHTML = `
+      <td><span class="match-no-badge">#${m.matchno}</span></td>
+      <td style="font-size:11px;">${formatDate(m.date)}</td>
       <td><span class="team-tag">${m.teams}</span></td>
-      <td style="font-size:12px;font-weight:700;">${m.teamwon||'—'}</td>
-      <td>${m.contest==='yes'?'<span class="won-badge">YES</span>':'<span class="lost-badge">NO</span>'}</td>
-      <td>${m.contest==='yes'?m.joinedCount+'/'+PLAYERS.length:'—'}</td>
-      <td>₹${m.fee}</td>
-      <td style="color:var(--green);font-weight:700;">₹${m.pool}</td>
-      <td>${isWinner?`<span style="color:var(--accent);font-weight:700;">${m.fantasyWinner}</span>`:'—'}</td>
-      <td>${isWinner?`<span style="color:var(--green);font-weight:700;">₹${m.winningPerWinner.toFixed(2)}</span>`:'—'}</td>
-      <td>${m.contest==='yes'&&isWinner?
-        `<button class="btn btn-sm ${m.transferred?'btn-success':'btn-danger'}" onclick="toggleTransfer(${idx})">
-          ${m.transferred?'✅ Done':'⏳ Pending'}
-        </button>`:'—'}</td>
-      ${playerCells}
+      <td style="font-size:11px; font-weight:700;">${m.teamwon || '—'}</td>
+      <td>${m.contest === 'yes' ? '<span class="won-badge">YES</span>' : '<span class="lost-badge">NO</span>'}</td>
+      <td style="font-size:11px;">${m.contest === 'yes' ? m.joinedCount + '/' + PLAYERS.length : '—'}</td>
+      <td style="font-size:11px;">₹${m.fee}</td>
+      <td style="color:var(--green); font-weight:700; font-size:11px;">₹${m.pool}</td>
+      <td style="font-size:11px;">${isWinner ? `<span style="color:var(--accent); font-weight:700;">${m.fantasyWinner}</span>` : '—'}</td>
+      <td style="font-size:11px;">${isWinner ? `<span style="color:var(--green); font-weight:700;">₹${m.winningPerWinner.toFixed(2)}</span>` : '—'}</td>
       <td>
-      <td>${appLinkHtml}</td>
-        <div style="display:flex;gap:4px;flex-direction:column;">
-          <button class="btn btn-sm btn-primary" onclick="editMatch(${idx})">✏️ Edit</button>
-          <button class="btn btn-sm btn-danger" onclick="deleteMatch(${idx})">🗑 Del</button>
+        ${(m.contest === 'yes' && isWinner) ? 
+          `<button class="btn btn-sm ${m.transferred ? 'btn-success' : 'btn-danger'}" onclick="toggleTransfer(${idx})" style="font-size:9px; padding:2px 5px;">
+            ${m.transferred ? '✅ Done' : '⏳ Pending'}
+          </button>` : '—'}
+      </td>
+      ${playerCells}
+      <td style="text-align:center;">${appLinkHtml}</td>
+      <td>
+        <div style="display:flex; gap:4px; flex-direction:column; align-items:center;">
+          <button class="btn btn-sm btn-primary" style="font-size:9px; padding:2px 6px; width:50px;" onclick="editMatch(${idx})">✏️ Edit</button>
+          <button class="btn btn-sm btn-danger" style="font-size:9px; padding:2px 6px; width:50px;" onclick="deleteMatch(${idx})">🗑 Del</button>
         </div>
       </td>`;
+    
     tbody.appendChild(tr);
   });
+  
   renderTotals();
 }
-
+  
 function renderTotals(){
   const bar = document.getElementById('totals-bar');
   
