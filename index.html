@@ -299,6 +299,42 @@ body {
   50% { transform: scale(1.05); }
   100% { transform: scale(1); }
 }
+
+/* Live Pulse Animation */
+.live-badge {
+  background: #ff4757;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  animation: live-glow 1.5s infinite;
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+}
+
+@keyframes live-glow {
+  0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); transform: scale(1); }
+  70% { box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); transform: scale(1.05); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); transform: scale(1); }
+}
+
+.countdown-text {
+  font-size: 10px;
+  color: var(--accent);
+  font-weight: bold;
+  display: block;
+  margin-top: 2px;
+}
   
 </style>
 </head>
@@ -593,22 +629,30 @@ function refreshCurrentSection(isNewData){
 }
 
 // ===================== RENDER MATCH LOG =====================
-function renderMatchLog(flash){
+function renderMatchLog(flash) {
   const tbody = document.getElementById('match-tbody');
   const msg = document.getElementById('no-match-msg');
-  tbody.innerHTML='';
+  tbody.innerHTML = '';
   const thead = document.querySelector('#match-table thead tr');
-  thead.innerHTML='';
-  const fixedHeaders = ['Match','Date','Teams','Team Won','Contest','Joined','Fee(₹)','Pool(₹)','Fantasy Winner','Payout(₹)','Transferred'];
-  fixedHeaders.forEach(h=>{const th=document.createElement('th');th.textContent=h;thead.appendChild(th);});
-  PLAYERS.forEach(p=>{
-    const th=document.createElement('th');
-    th.innerHTML=`<div style="writing-mode:vertical-rl;transform:rotate(180deg);height:78px;font-size:10px;white-space:nowrap;">${p}<br><span style="color:var(--text2);font-size:9px;">J/P/Pts/Rk</span></div>`;
+  thead.innerHTML = '';
+  const fixedHeaders = ['Match', 'Date', 'Teams', 'Team Won', 'Contest', 'Joined', 'Fee(₹)', 'Pool(₹)', 'Fantasy Winner', 'Payout(₹)', 'Transferred'];
+  fixedHeaders.forEach(h => {
+    const th = document.createElement('th');
+    th.textContent = h;
+    thead.appendChild(th);
+  });
+  PLAYERS.forEach(p => {
+    const th = document.createElement('th');
+    th.innerHTML = `<div style="writing-mode:vertical-rl;transform:rotate(180deg);height:78px;font-size:10px;white-space:nowrap;">${p}<br><span style="color:var(--text2);font-size:9px;">J/P/Pts/Rk</span></div>`;
     thead.appendChild(th);
   });
 
-  if(matches.length===0){msg.style.display='block';renderTotals();return;}
-  msg.style.display='none';
+  if (matches.length === 0) {
+    msg.style.display = 'block';
+    renderTotals();
+    return;
+  }
+  msg.style.display = 'none';
 
   matches.forEach((m, idx) => {
     const tr = document.createElement('tr');
@@ -616,6 +660,27 @@ function renderMatchLog(flash){
 
     // 1. Check if the match is officially finished
     const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
+
+    // --- NEW: LIVE & COUNTDOWN LOGIC ---
+    const now = new Date();
+    const matchDate = new Date(m.date);
+    matchDate.setHours(19, 30, 0); // Setting IPL Start Time to 7:30 PM
+    
+    const diff = matchDate - now;
+    const fourHoursInMs = 4 * 60 * 60 * 1000;
+    let statusHtml = '';
+
+    if (!matchIsComplete) {
+      if (diff > 0 && diff < 24 * 60 * 60 * 1000) {
+        // Upcoming today
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        statusHtml = `<span class="countdown-text" style="display:block; font-size:10px; color:var(--accent); font-weight:bold; margin-top:2px;">⏳ Starts in ${hours}h ${mins}m</span>`;
+      } else if (diff <= 0 && Math.abs(diff) < fourHoursInMs) {
+        // LIVE Pulse
+        statusHtml = `<div class="live-badge" style="margin-top:4px;"><span class="live-dot"></span>LIVE</div>`;
+      }
+    }
 
     // 2. Calculate highest points ONLY if match is complete AND points exist
     let maxPaidPoints = -1;
@@ -638,34 +703,32 @@ function renderMatchLog(flash){
         const rank = m.joinedRanks ? m.joinedRanks[p] : '?';
         const ptsValue = parseFloat(pd.points) || 0;
         const ptsDisplay = ptsValue.toFixed(2);
-        
-        // 3. CORRECTED HIGHLIGHT RULE:
-        // Must be Complete AND Paid AND have points GREATER than 0 AND be the max
-        const isHighestPaid = matchIsComplete && 
-                              pd.paid && 
-                              ptsValue > 0 && 
-                              ptsValue === maxPaidPoints;
+
+        const isHighestPaid = matchIsComplete &&
+          pd.paid &&
+          ptsValue > 0 &&
+          ptsValue === maxPaidPoints;
 
         const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
         const payBtn = !pd.paid ? `<button class="pay-now-btn" onclick="showPaymentAlert()">💸 Pay Now</button>` : '';
 
         if (isHighestPaid) {
           playerCells += `<td>
-            <div class="rank-1-box">
-              <div style="font-size:11px;" class="joined-yes">✅ Joined</div>
-              <div class="paid-yes" style="font-size:11px;">💰 Paid</div>
-              <div style="font-size:15px; font-weight:900; color:var(--accent);">${ptsDisplay}</div>
-              <div class="rank-1" style="font-size:13px; font-weight:900;">#${rank}</div>
-            </div>
-          </td>`;
+             <div class="rank-1-box">
+               <div style="font-size:11px;" class="joined-yes">✅ Joined</div>
+               <div class="paid-yes" style="font-size:11px;">💰 Paid</div>
+               <div style="font-size:15px; font-weight:900; color:var(--accent);">${ptsDisplay}</div>
+               <div class="rank-1" style="font-size:13px; font-weight:900;">#${rank}</div>
+             </div>
+           </td>`;
         } else {
           playerCells += `<td>
-            <div style="font-size:11px;" class="joined-yes">✅ Joined</div>
-            <div class="${pd.paid ? 'paid-yes' : 'paid-no'}" style="font-size:11px;">${pd.paid ? '💰 Paid' : '❌ Unpaid'}</div>
-            <div style="font-size:12px; font-weight:700;">${ptsDisplay}</div>
-            <div class="${rankClass}" style="font-size:11px;">#${rank}</div>
-            ${payBtn}
-          </td>`;
+             <div style="font-size:11px;" class="joined-yes">✅ Joined</div>
+             <div class="${pd.paid ? 'paid-yes' : 'paid-no'}" style="font-size:11px;">${pd.paid ? '💰 Paid' : '❌ Unpaid'}</div>
+             <div style="font-size:12px; font-weight:700;">${ptsDisplay}</div>
+             <div class="${rankClass}" style="font-size:11px;">#${rank}</div>
+             ${payBtn}
+           </td>`;
         }
       }
     });
@@ -673,18 +736,21 @@ function renderMatchLog(flash){
     const isWinner = matchIsComplete && m.fantasyWinner && m.fantasyWinner !== '';
 
     tr.innerHTML = `
-      <td><span class="match-no-badge">#${m.matchno}</span></td>
-      <td style="font-size:12px;">${formatDate(m.date)}</td>
-      <td><span class="team-tag">${m.teams}</span></td>
-      <td style="font-size:12px;font-weight:700;">${m.teamwon || '—'}</td>
-      <td>${m.contest === 'yes' ? '<span class="won-badge">YES</span>' : '<span class="lost-badge">NO</span>'}</td>
-      <td>${m.contest === 'yes' ? m.joinedCount + '/' + PLAYERS.length : '—'}</td>
-      <td>₹${m.fee}</td>
-      <td style="color:var(--green);font-weight:700;">₹${m.pool}</td>
-      <td>${isWinner ? `<span style="color:var(--accent);font-weight:700;">${m.fantasyWinner}</span>` : '—'}</td>
-      <td>${isWinner ? `<span style="color:var(--green);font-weight:700;">₹${m.winningPerWinner.toFixed(2)}</span>` : '—'}</td>
-      <td>${m.contest === 'yes' && isWinner ? (m.transferred ? '<span class="transfer-done">✅ Done</span>' : '<span class="transfer-pending">⏳ Pending</span>') : '—'}</td>
-      ${playerCells}`;
+       <td><span class="match-no-badge">#${m.matchno}</span></td>
+       <td style="font-size:12px;">
+         ${formatDate(m.date)}
+         ${statusHtml}
+       </td>
+       <td><span class="team-tag">${m.teams}</span></td>
+       <td style="font-size:12px;font-weight:700;">${m.teamwon || '—'}</td>
+       <td>${m.contest === 'yes' ? '<span class="won-badge">YES</span>' : '<span class="lost-badge">NO</span>'}</td>
+       <td>${m.contest === 'yes' ? m.joinedCount + '/' + PLAYERS.length : '—'}</td>
+       <td>₹${m.fee}</td>
+       <td style="color:var(--green);font-weight:700;">₹${m.pool}</td>
+       <td>${isWinner ? `<span style="color:var(--accent);font-weight:700;">${m.fantasyWinner}</span>` : '—'}</td>
+       <td>${isWinner ? `<span style="color:var(--green);font-weight:700;">₹${m.winningPerWinner.toFixed(2)}</span>` : '—'}</td>
+       <td>${m.contest === 'yes' && isWinner ? (m.transferred ? '<span class="transfer-done">✅ Done</span>' : '<span class="transfer-pending">⏳ Pending</span>') : '—'}</td>
+       ${playerCells}`;
 
     tbody.appendChild(tr);
   });
@@ -1022,7 +1088,7 @@ function renderGraphs(){
   charts.invwin=new Chart(document.getElementById('chart-inv-win'),{type:'bar',data:invWinData,options:chartOpts('₹','Amount')});
   charts.wins=new Chart(document.getElementById('chart-wins'),{type:'doughnut',data:{labels:PLAYERS,datasets:[{data:PLAYERS.map(p=>stats[p].wins),backgroundColor:COLORS,borderColor:'#1b2540',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8899bb',font:{family:'Rajdhani',size:13}}}}}});
   const pointsDatasets=PLAYERS.map((p,i)=>({label:p,data:matches.map(m=>m.players[p]&&m.players[p].joined?m.players[p].points:null),borderColor:COLORS[i],backgroundColor:COLORS[i]+'33',spanGaps:false,tension:0.3,pointRadius:5,borderWidth:2}));
-  charts.points=new Chart(document.getElementById('chart-points'),{type:'line',data:{labels,datasets:pointsDatasets},options:chartOpts('pts','Points')});
+  charts.pointrenderMatchLogs=new Chart(document.getElementById('chart-points'),{type:'line',data:{labels,datasets:pointsDatasets},options:chartOpts('pts','Points')});
   charts.winpct=new Chart(document.getElementById('chart-winpct'),{type:'polarArea',data:{labels:PLAYERS,datasets:[{data:PLAYERS.map(p=>stats[p].paidContests>0?parseFloat(((stats[p].wins/stats[p].paidContests)*100).toFixed(1)):0),backgroundColor:COLORS.map(c=>c+'99'),borderColor:COLORS,borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8899bb',font:{family:'Rajdhani',size:12}}}},scales:{r:{ticks:{color:'#8899bb'},grid:{color:'#1e2d50'}}}}});
   charts.pool=new Chart(document.getElementById('chart-pool'),{type:'bar',data:{labels,datasets:[{label:'Pool (₹)',data:matches.map(m=>m.pool),backgroundColor:matches.map(m=>m.pool>0?'rgba(245,166,35,0.5)':'rgba(100,100,100,0.3)'),borderColor:matches.map(m=>m.pool>0?'#f5a623':'#555'),borderWidth:1}]},options:chartOpts('₹','Pool Amount')});
 }
@@ -1048,6 +1114,28 @@ function showPaymentAlert() {
     `Good luck with the match! See you on the leaderboard! 🔥`;
   
   alert(message);
+}
+
+function getMatchStatus(matchDateStr) {
+  const now = new Date();
+  const matchDate = new Date(matchDateStr);
+  
+  // Assume IPL start time is 7:30 PM (19:30) IST
+  matchDate.setHours(19, 30, 0);
+  
+  const diff = matchDate - now;
+  const fourHoursInMs = 4 * 60 * 60 * 1000;
+
+  if (diff > 0 && diff < 24 * 60 * 60 * 1000) {
+    // Upcoming today - Show countdown
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return { status: 'upcoming', text: `Starts in ${hours}h ${mins}m` };
+  } else if (diff <= 0 && Math.abs(diff) < fourHoursInMs) {
+    // Match started less than 4 hours ago
+    return { status: 'live', text: 'LIVE' };
+  }
+  return { status: 'past', text: '' };
 }
 
 // ===================== INIT =====================
