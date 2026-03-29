@@ -723,10 +723,12 @@ function renderMatchLog(){
       }
     });
     const isWinner = m.fantasyWinner&&m.fantasyWinner!=='';
+    const appLinkHtml = m.contestLink 
+      ? `<a href="${m.contestLink}" target="_blank" class="app-link-btn">🏆 App</a>` 
+      : `-`;
     tr.innerHTML=`
      <td>
         <span class="match-no-badge">#${m.matchno}</span>
-        ${m.contestLink ? `<br><a href="${m.contestLink}" target="_blank" class="app-link-btn">🏆 App</a>` : ''}
       </td>
       <td style="font-size:12px;">${formatDate(m.date)}</td>
       <td><span class="team-tag">${m.teams}</span></td>
@@ -743,6 +745,7 @@ function renderMatchLog(){
         </button>`:'—'}</td>
       ${playerCells}
       <td>
+      <td>${appLinkHtml}</td>
         <div style="display:flex;gap:4px;flex-direction:column;">
           <button class="btn btn-sm btn-primary" onclick="editMatch(${idx})">✏️ Edit</button>
           <button class="btn btn-sm btn-danger" onclick="deleteMatch(${idx})">🗑 Del</button>
