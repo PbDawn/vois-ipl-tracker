@@ -178,6 +178,28 @@ tr:hover td{background:rgba(245,166,35,0.04);}
 .highlight{animation:pulse 1.5s ease;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
 .cloud-tag{font-size:10px;background:rgba(46,204,113,0.15);color:var(--green);border:1px solid rgba(46,204,113,0.3);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle;}
+
+/* MYCIRCLE11 APP LINK BUTTON */
+.app-link-btn {
+  display: inline-block;
+  margin-top: 6px;
+  background: rgba(245, 166, 35, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(245, 166, 35, 0.4);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-decoration: none;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+.app-link-btn:hover {
+  background: rgba(245, 166, 35, 0.25);
+  border-color: var(--accent);
+}
+  
 </style>
 </head>
 <body>
@@ -256,7 +278,7 @@ tr:hover td{background:rgba(245,166,35,0.04);}
   <div class="sec-title">Add / Edit Match</div>
   <div class="match-form-section">
     <div class="form-title">Match Details</div>
-    <div class="form-row">
+   <div class="form-row">
       <div class="form-group"><label>Match No.</label><input type="number" id="f-matchno" placeholder="e.g. 1" min="1"/></div>
       <div class="form-group"><label>Match Date</label><input type="date" id="f-date"/></div>
       <div class="form-group"><label>Teams Playing</label><input type="text" id="f-teams" placeholder="e.g. MI vs CSK"/></div>
@@ -267,6 +289,7 @@ tr:hover td{background:rgba(245,166,35,0.04);}
           <option value="yes">Yes</option><option value="no">No</option>
         </select>
       </div>
+      <div class="form-group"><label>MyCircle11 Link</label><input type="text" id="f-link" placeholder="Paste app link here..."/></div>
     </div>
     <div id="player-section">
       <div class="divider"></div>
@@ -548,6 +571,7 @@ function saveMatch(){
   const teamwon = document.getElementById('f-winner').value.trim();
   const fee = parseFloat(document.getElementById('f-fee').value)||50;
   const contest = document.getElementById('f-contest').value;
+  const contestLink = document.getElementById('f-link').value.trim();
 
   if(!matchno||!date||!teams){showToast('Please fill Match No, Date and Teams!');return;}
 
@@ -592,7 +616,7 @@ function saveMatch(){
   const transferred = existing ? existing.transferred : false;
 
   const matchObj = {
-    matchno, date, teams, teamwon, contest, fee,
+    matchno, date, teams, teamwon, contest, fee, contestLink,
     joinedCount: joinedPlayers.length, paidCount: paidPlayers.length,
     pool, fantasyWinner, tiedWinners,
     winningPerWinner: tiedWinners.length>0 ? pool/tiedWinners.length : 0,
@@ -622,6 +646,7 @@ function clearForm(){
   document.getElementById('f-fee').value=50;
   document.getElementById('f-contest').value='yes';
   document.getElementById('player-section').style.display='block';
+  document.getElementById('f-link').value='';
   editingIdx=null;
   document.getElementById('edit-indicator').style.display='none';
   renderPlayerEntries();
@@ -637,6 +662,7 @@ function editMatch(idx){
   document.getElementById('f-winner').value = m.teamwon;
   document.getElementById('f-fee').value = m.fee;
   document.getElementById('f-contest').value = m.contest;
+  document.getElementById('f-link').value = m.contestLink || '';
   toggleContestFields();
   renderPlayerEntries(m);
   document.getElementById('edit-indicator').style.display = 'inline';
@@ -698,7 +724,10 @@ function renderMatchLog(){
     });
     const isWinner = m.fantasyWinner&&m.fantasyWinner!=='';
     tr.innerHTML=`
-      <td><span class="match-no-badge">#${m.matchno}</span></td>
+     <td>
+        <span class="match-no-badge">#${m.matchno}</span>
+        ${m.contestLink ? `<br><a href="${m.contestLink}" target="_blank" class="app-link-btn">🏆 App</a>` : ''}
+      </td>
       <td style="font-size:12px;">${formatDate(m.date)}</td>
       <td><span class="team-tag">${m.teams}</span></td>
       <td style="font-size:12px;font-weight:700;">${m.teamwon||'—'}</td>
