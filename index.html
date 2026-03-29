@@ -586,22 +586,30 @@ function renderTotals(){
 }
 
 // ===================== PLAYER STATS =====================
+// ===================== PLAYER STATS =====================
 function renderPlayerStats(){
   const wrap = document.getElementById('player-cards-wrap');
   wrap.innerHTML='';
   const stats = computePlayerStats();
+  
   PLAYERS.forEach((p,i)=>{
     const s=stats[p];
     const profit=s.totalWon-s.totalInvested;
     const winpct = s.paidContests>0 ? ((s.wins/s.paidContests)*100).toFixed(1) : '0.0';
     const div=document.createElement('div');
     div.className='p-card';
+    
+    // 1. Check for the image and build the avatar safely
+    const avatarHtml = PLAYER_IMAGES[p] 
+      ? `<div class="p-avatar" style="border-color:${COLORS[i]}; background-image:url('${PLAYER_IMAGES[p]}'); background-size:cover; background-position:center; color:transparent;">${p[0]}</div>`
+      : `<div class="p-avatar" style="border-color:${COLORS[i]};color:${COLORS[i]};background:${COLORS[i]}22;">${p[0]}</div>`;
+
+    // 2. Insert the HTML structure with the proper header padding and flex gaps
     div.innerHTML=`
       <div class="p-card-header">
-        <div class="p-avatar" style="border-color:${COLORS[i]}; background-image:url('${PLAYER_IMAGES[p]}'); background-size:cover; background-position:center; color:transparent;">
-          ${p[0]}
-        </div>
-        <div><div class="p-name">${p}</div>
+        ${avatarHtml}
+        <div>
+          <div class="p-name">${p}</div>
           <div class="p-winpct">Win Rate: <span>${winpct}%</span> (${s.wins}/${s.paidContests} paid)</div>
         </div>
       </div>
