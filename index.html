@@ -702,6 +702,7 @@ function renderTotals(){
 // ===================== PLAYER STATS =====================
 function renderPlayerStats() {
   const wrap = document.getElementById('player-cards-wrap');
+  if (!wrap) return;
   wrap.innerHTML = '';
   const stats = computePlayerStats();
 
@@ -711,8 +712,10 @@ function renderPlayerStats() {
   PLAYERS.forEach(p => {
     const s = stats[p];
     const profit = s.totalWon - s.totalInvested;
+    const currentAvg = parseFloat(s.avgPoints) || 0;
+    
     if (s.wins > maxWins) maxWins = s.wins;
-    if (parseFloat(s.avgPoints) > maxAvg) maxAvg = parseFloat(s.avgPoints);
+    if (currentAvg > maxAvg) maxAvg = currentAvg;
     if (s.bestPoints > maxBest) maxBest = s.bestPoints;
     if (profit > maxProfit) maxProfit = profit;
   });
@@ -725,10 +728,17 @@ function renderPlayerStats() {
 
     // Badge Logic
     let badgesHtml = '';
-    if (s.wins === maxWins && maxWins > 0) badgesHtml += `<span class="badge-icon" title="Most Wins">🏆 Win Machine</span>`;
-    if (parseFloat(s.avgPoints) === maxAvg && maxAvg > 0) badgesHtml += `<span class="badge-icon" title="Highest Average">🎯 Mr. Consistent</span>`;
-    if (s.bestPoints === maxBest && maxBest > 0) badgesHtml += `<span class="badge-icon" title="Highest Single Score">🚀 High Flyer</span>`;
-    if (profit === maxProfit && maxProfit > 0) badgesHtml += `<span class="badge-icon" title="Most Profit">💰 The Shark</span>`;
+    if (s.wins === maxWins && maxWins > 0) 
+      badgesHtml += `<span class="badge-icon" title="Most Wins">🏆 Win Machine</span>`;
+    
+    if (parseFloat(s.avgPoints) === maxAvg && maxAvg > 0) 
+      badgesHtml += `<span class="badge-icon" title="Highest Average">🎯 Mr. Consistent</span>`;
+    
+    if (s.bestPoints === maxBest && maxBest > 0) 
+      badgesHtml += `<span class="badge-icon" title="Highest Single Score">🚀 High Flyer</span>`;
+    
+    if (profit === maxProfit && maxProfit > 0) 
+      badgesHtml += `<span class="badge-icon" style="background:rgba(46,204,113,0.15); color:#2ecc71; border-color:rgba(46,204,113,0.3);" title="Most Profit">💰 The Shark</span>`;
 
     const div = document.createElement('div');
     div.className = 'p-card';
@@ -745,20 +755,29 @@ function renderPlayerStats() {
         ${avatarHtml}
         <div style="display:flex; flex-direction:column; gap:2px;">
           <div class="p-name" style="margin:0; line-height:1;">${p}</div>
-          <div class="p-winpct" style="margin:0; line-height:1;">Win Rate: <span>${winpct}%</span></div>
-          <div class="badges-container" style="display:flex; gap:4px; margin-top:5px;">${badgesHtml}</div>
+          <div class="p-winpct" style="margin:0; line-height:1; font-size:11px;">Win Rate: <span>${winpct}%</span></div>
+          <div class="badges-container" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px;">${badgesHtml}</div>
         </div>
       </div>
       <div class="p-card-body">
-        <div class="p-stat-row"><span class="p-stat-label">Avg Points</span><span class="p-stat-val accent">${s.avgPoints}</span></div>
+        
         <div class="p-stat-row"><span class="p-stat-label">Matches Played</span><span class="p-stat-val">${s.matchesPlayed}</span></div>
-        <div class="p-stat-row"><span class="p-stat-label">Matches Won</span><span class="p-stat-val" style="color:${COLORS[i]};">${s.wins}</span></div>
+        <div class="p-stat-row"><span class="p-stat-label">Matches Won</span><span class="p-stat-val" style="color:${COLORS[i]}; font-weight:700;">${s.wins}</span></div>
         <div class="p-stat-row"><span class="p-stat-label">Total Invested</span><span class="p-stat-val red">₹${s.totalInvested}</span></div>
         <div class="p-stat-row"><span class="p-stat-label">Total Winnings</span><span class="p-stat-val green">₹${s.totalWon.toFixed(2)}</span></div>
         <div class="p-stat-row"><span class="p-stat-label">Profit / Loss</span>
           <span class="p-stat-val ${profit >= 0 ? 'green' : 'red'}">${profit >= 0 ? '+' : ''}₹${profit.toFixed(2)}</span></div>
         <div class="p-stat-row"><span class="p-stat-label">Best Points</span><span class="p-stat-val accent">${s.bestPoints}</span></div>
-        ${s.carryFwd > 0 ? `<div class="p-stat-row"><span class="p-stat-label">Carry Forward</span><span class="p-stat-val"><span class="cf-tag">₹${s.carryFwd.toFixed(2)} pending</span></span></div>` : ''}
+        <div class="p-stat-row">
+          <span class="p-stat-label">Avg Points (Per Match)</span>
+          <span class="p-stat-val accent" style="font-weight:800;">${s.avgPoints}</span>
+        </div>
+        
+        ${s.carryFwd > 0 ? `
+          <div class="p-stat-row">
+            <span class="p-stat-label">Carry Forward</span>
+            <span class="p-stat-val"><span class="cf-tag">₹${s.carryFwd.toFixed(2)} pending</span></span>
+          </div>` : ''}
       </div>
     `;
 
