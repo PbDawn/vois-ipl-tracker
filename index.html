@@ -554,18 +554,32 @@ function renderMatchLog(flash){
   matches.forEach((m,idx)=>{
     const tr = document.createElement('tr');
     if(flash) tr.classList.add('flash-new');
+    // 1. Find the highest points ONLY among players who PAID for this match
+    let maxPaidPoints = -1;
+    PLAYERS.forEach(p => {
+      const pd = m.players[p];
+      if (pd && pd.joined && pd.paid) {
+        const pts = parseFloat(pd.points) || 0;
+        if (pts > maxPaidPoints) maxPaidPoints = pts;
+      }
+    });
+
     let playerCells='';
     PLAYERS.forEach(p=>{
       const pd=m.players[p];
       if(!pd||!pd.joined){
         playerCells+=`<td style="color:var(--text2);font-size:13px;">—</td>`;
-     } else {
-        const rank=m.joinedRanks?m.joinedRanks[p]:'?';
-        const isRank1 = rank === 1;
-        const rankClass = isRank1 ? 'rank-1' : rank===2 ? 'rank-2' : rank===3 ? 'rank-3' : '';
+      } else {
+        const rank = m.joinedRanks ? m.joinedRanks[p] : '?';
+        const pts = parseFloat(pd.points) || 0;
         
-        if (isRank1) {
-          // Highlighted Rank 1 Box (Bolder, Larger, Gold Border)
+        // 2. Apply the highlight box ONLY if they PAID and match the top paid score
+        const isHighestPaid = (pd.paid && pts === maxPaidPoints && maxPaidPoints > 0);
+        
+        // Keep standard text colors for everyone
+        const rankClass = rank === 1 ? 'rank-1' : rank===2 ? 'rank-2' : rank===3 ? 'rank-3' : '';
+        
+        if (isHighestPaid) {
           playerCells+=`<td>
             <div class="rank-1-box">
               <div style="font-size:12px; font-weight:900;" class="joined-yes">✅</div>
