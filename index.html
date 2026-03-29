@@ -108,7 +108,7 @@ tr:hover td{background:rgba(245,166,35,0.04);}
 .lb-wins{font-size:12px;color:var(--text2);text-align:right;margin-top:4px;}
 .player-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
 .p-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-.p-card-header{background:linear-gradient(135deg,var(--bg3),var(--card2));padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.p-{background:linear-gradient(135deg,var(--bg3),var(--card2));padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
 .p-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   font-family:'Bebas Neue',sans-serif;font-size:20px;border:2px solid var(--accent);color:var(--accent);background:rgba(245,166,35,0.08);flex-shrink:0;}
 .p-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;}
@@ -598,9 +598,10 @@ function renderPlayerStats(){
     div.className='p-card';
     div.innerHTML=`
       <div class="p-card-header">
-        <div class="p-avatar" style="border-color:${COLORS[i]}; background-image:url('${PLAYER_IMAGES[p]}'); background-size:cover; background-position:center; color:transparent;">
-          ${p[0]}
-        </div>
+        ${PLAYER_IMAGES[p] 
+          ? `<div class="p-avatar" style="border-color:${COLORS[i]}; background-image:url('${PLAYER_IMAGES[p]}'); background-size:cover; background-position:center; color:transparent;">${p[0]}</div>`
+          : `<div class="p-avatar" style="border-color:${COLORS[i]};color:${COLORS[i]};background:${COLORS[i]}22;">${p[0]}</div>`
+        }
         <div><div class="p-name">${p}</div>
           <div class="p-winpct">Win Rate: <span>${winpct}%</span> (${s.wins}/${s.paidContests} paid)</div>
         </div>
