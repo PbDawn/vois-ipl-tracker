@@ -719,6 +719,10 @@ function renderPlayerStats(){
         <div class="p-stat-row"><span class="p-stat-label">Profit / Loss</span>
           <span class="p-stat-val ${profit>=0?'green':'red'}">${profit>=0?'+':''}₹${profit.toFixed(2)}</span></div>
         <div class="p-stat-row"><span class="p-stat-label">Best Points</span><span class="p-stat-val accent">${s.bestPoints}</span></div>
+        <div class="p-stat-row">
+      <span class="p-stat-label">Avg Points (Scored)</span>
+      <span class="p-stat-val" style="color:var(--accent); font-weight:bold;">${s.avgPoints}</span>
+    </div>
         ${s.carryFwd>0 ? `<div class="p-stat-row"><span class="p-stat-label">Carry Forward</span><span class="p-stat-val"><span class="cf-tag">₹${s.carryFwd.toFixed(2)} pending</span></span></div>` : ''}
       </div>
     `;
@@ -726,7 +730,7 @@ function renderPlayerStats(){
     wrap.appendChild(div);
   });
 }
-
+/*
 function computePlayerStats(){
   let stats = {};
   PLAYERS.forEach(p=>{
@@ -774,6 +778,68 @@ function computePlayerStats(){
   });
 
   PLAYERS.forEach(p=>{stats[p].carryFwd=cf[p]>0?cf[p]:0;});
+  return stats;
+} */
+
+  function computePlayerStats(){
+  let stats = {};
+  PLAYERS.forEach(p => {
+    stats[p] = {
+      matchesPlayed: 0, contested: 0, paidContests: 0, wins: 0,
+      totalInvested: 0, totalWon: 0, bestPoints: 0, carryFwd: 0,
+      avgPoints: 0, matchesWithPoints: 0, sumPoints: 0 // New fields
+    };
+  });
+  
+  let cf = {}; PLAYERS.forEach(p => { cf[p] = 0; });
+
+  matches.forEach(m => {
+    const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
+    if (!matchIsComplete) return; 
+
+    PLAYERS.forEach(p => {
+      const pd = m.players[p];
+      if (!pd || !pd.joined) return;
+      
+      const s = stats[p];
+      s.matchesPlayed++;
+
+      if (m.contest === 'yes') {
+        s.contested++;
+        if (pd.paid) {
+          s.paidContests++;
+          if (cf[p] <= 0) s.totalInvested += m.fee; else cf[p] -= m.fee;
+        }
+        
+        const pts = parseFloat(pd.points) || 0;
+        
+        // Update Best Points
+        if (pts > s.bestPoints) s.bestPoints = pts;
+
+        // --- NEW LOGIC: Average Points Calculation ---
+        // Only add to average if points > 0
+        if (pts > 0) {
+          s.sumPoints += pts;
+          s.matchesWithPoints++;
+        }
+
+        if (m.tiedWinners && m.tiedWinners.includes(p) && m.pool > 0) {
+          s.wins++;
+          const won = m.winningPerWinner || 0;
+          if (m.transferred) s.totalWon += won; else cf[p] += won;
+        }
+      }
+    });
+  });
+
+  PLAYERS.forEach(p => {
+    const s = stats[p];
+    s.carryFwd = cf[p] > 0 ? cf[p] : 0;
+    
+    // Final Average Calculation (Total Points / Matches where they scored > 0)
+    s.avgPoints = s.matchesWithPoints > 0 ? (s.sumPoints / s.matchesWithPoints).toFixed(2) : "0.00";
+  });
+  
   return stats;
 }
 
