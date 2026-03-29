@@ -575,9 +575,6 @@ function renderMatchLog(flash){
   matches.forEach((m,idx)=>{
     const tr = document.createElement('tr');
     if(flash) tr.classList.add('flash-new');
-   // 1. Define if the match is officially finished
-    const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
-
     // 2. Calculate highest points ONLY if match is complete
     let maxPaidPoints = -1;
     if (matchIsComplete) {
@@ -590,46 +587,38 @@ function renderMatchLog(flash){
       });
     }
 
-    let playerCells = '';
-    PLAYERS.forEach(p => {
-      const pd = m.players[p];
-      if (!pd || !pd.joined) {
-        playerCells += `<td style="color:var(--text2);font-size:13px;">—</td>`;
+   let playerCells='';
+    PLAYERS.forEach(p=>{
+      const pd=m.players[p];
+      if(!pd||!pd.joined){
+        playerCells+=`<td style="color:var(--text2);font-size:13px;">—</td>`;
       } else {
         const rank = m.joinedRanks ? m.joinedRanks[p] : '?';
         const pts = parseFloat(pd.points).toFixed(2);
-        // 3. Highlight Rule: Match MUST be complete + Player MUST have paid + Must be top score
-        const isHighestPaid = matchIsComplete && pd.paid && (parseFloat(pts) === maxPaidPoints) && maxPaidPoints > 0;
+        const isRank1 = (pd.paid && rank === 1); // Only highlight Rank 1 if they PAID
         
-        const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
+        // Build the PAY NOW button if unpaid
         const payBtn = !pd.paid ? `<button class="pay-now-btn" onclick="showPaymentAlert()">💸 Pay Now</button>` : '';
-
-        if (isHighestPaid) {
-          // HIGHLIGHTED WINNER (Only shows after Team Won is entered)
-          playerCells += `<td>
+        
+        if (isRank1) {
+          playerCells+=`<td>
             <div class="rank-1-box">
               <div style="font-size:11px;" class="joined-yes">✅ Joined</div>
               <div class="paid-yes" style="font-size:11px;">💰 Paid</div>
               <div style="font-size:15px; font-weight:900; color:var(--accent);">${pts}</div>
               <div class="rank-1" style="font-size:13px; font-weight:900;">#${rank}</div>
             </div>
-            </td>`;
-        } else {
-          // STANDARD VIEW (Shows for Live matches or non-winners)
-          playerCells += `<td>
-            <div style="font-size:11px;" class="joined-yes">✅ Joined</div>
-            <div class="${pd.paid ? 'paid-yes' : 'paid-no'}" style="font-size:11px;">${pd.paid ? '💰 Paid' : '❌ Unpaid'}</div>
-            <div style="font-size:12px; font-weight:700;">${pts}</div>
-            <div class="${rankClass}" style="font-size:11px;">#${rank}</div>
-            ${payBtn}
           </td>`;
+        } else {
+          playerCells+=`<td>
+            <div style="font-size:11px;" class="joined-yes">✅ Joined</div>
+            <div class="${pd.paid?'paid-yes':'paid-no'}" style="font-size:11px;">${pd.paid?'💰 Paid':'❌ Unpaid'}</div>
+            <div style="font-size:12px; font-weight:700;">${pts}</div>
+            <div class="${rank === 1 ? 'rank-1' : rank===2 ? 'rank-2' : rank===3 ? 'rank-3' : ''}" style="font-size:11px;">#${rank}</div>
+            ${payBtn} </td>`;
         }
       }
     });
-
-    // 4. Final Winner/Payout Columns Logic
-    const isWinner = matchIsComplete && m.fantasyWinner && m.fantasyWinner !== '';
-    // --- END OF NEW LOGIC ---
     // Only declare a winner IF the real-life 'Team Won' field is filled out
     const matchIsComplete = m.teamwon && m.teamwon.trim() !== '';
     const isWinner = matchIsComplete && m.fantasyWinner && m.fantasyWinner !== '';
