@@ -586,10 +586,13 @@ function renderMatchLog(flash){
       }
     });
     const isWinner = m.fantasyWinner&&m.fantasyWinner!=='';
+    // 1. Safely calculate the button HTML
+    const appLinkHtml = m.contestLink 
+      ? `<a href="${m.contestLink}" target="_blank" class="app-link-btn">🏏 Click to View MyCircle11 Points</a>` 
+      : `-`;
     tr.innerHTML=`
       <td>
         <span class="match-no-badge">#${m.matchno}</span>
-        ${m.contestLink ? `<br><a href="${m.contestLink}" target="_blank" class="app-link-btn">🏆 App</a>` : ''}
       </td>
       <td style="font-size:12px;">${formatDate(m.date)}</td>
       <td><span class="team-tag">${m.teams}</span></td>
@@ -603,7 +606,8 @@ function renderMatchLog(flash){
       <td>${m.contest==='yes'&&isWinner?
         (m.transferred?'<span class="transfer-done">✅ Done</span>':'<span class="transfer-pending">⏳ Pending</span>')
         :'—'}</td>
-      ${playerCells}`;
+      ${playerCells}
+      <td>${appLinkHtml}</td>`;
     tbody.appendChild(tr);
   });
   renderTotals();
