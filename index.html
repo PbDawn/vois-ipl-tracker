@@ -599,7 +599,9 @@ function renderMatchLog(flash){
         }
       }
     });
-    const isWinner = m.fantasyWinner&&m.fantasyWinner!=='';
+    // Only declare a winner IF the real-life 'Team Won' field is filled out
+    const matchIsComplete = m.teamwon && m.teamwon.trim() !== '';
+    const isWinner = matchIsComplete && m.fantasyWinner && m.fantasyWinner !== '';
     // 1. Safely calculate the button HTML
    /* const appLinkHtml = m.contestLink 
       ? `<a href="${m.contestLink}" target="_blank" class="app-link-btn">🏏 Click to View MyCircle11 Points</a>` 
