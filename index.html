@@ -610,7 +610,7 @@ function renderMatchLog(flash){
       }
     });
     // Only declare a winner IF the real-life 'Team Won' field is filled out
-    const matchIsComplete = m.teamwon && m.teamwon.trim() !== '';
+    const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
     const isWinner = matchIsComplete && m.fantasyWinner && m.fantasyWinner !== '';
     // 1. Safely calculate the button HTML
    /* const appLinkHtml = m.contestLink 
