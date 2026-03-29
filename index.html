@@ -282,6 +282,23 @@ body {
   color: #2ecc71;
   border-color: rgba(46, 204, 113, 0.3);
 }
+
+.badge-icon[title*="STREAK"] {
+  animation: pulse-streak 2s infinite;
+}
+
+.streak-badge {
+  background: rgba(255, 69, 0, 0.2) !important;
+  color: #ff4500 !important;
+  border-color: rgba(255, 69, 0, 0.5) !important;
+  animation: pulse-streak 2s infinite;
+}
+
+@keyframes pulse-streak {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
   
 </style>
 </head>
@@ -740,6 +757,18 @@ function renderPlayerStats() {
     if (profit === maxProfit && maxProfit > 0) 
       badgesHtml += `<span class="badge-icon" style="background:rgba(46,204,113,0.15); color:#2ecc71; border-color:rgba(46,204,113,0.3);" title="Most Profit">💰 The Shark</span>`;
 
+    // --- NEW: ADD STREAK BADGE ---
+    if (s.streak >= 2) {
+      badgesHtml += `<span class="badge-icon streak-badge" title="Consecutive Wins">🔥 ${s.streak} STREAK</span>`;
+    }
+
+    // --- NEW: GENERATE FORM DOTS ---
+    const formHtml = (s.displayForm || []).map(res => {
+      if(res === 'win') return `<span style="color:#2ecc71; font-size:12px;" title="Won">✅</span>`;
+      if(res === 'loss') return `<span style="color:var(--text2); font-size:12px; opacity:0.5;" title="Lost">⚪</span>`;
+      return `<span style="color:var(--text2); font-size:10px; opacity:0.3;" title="Skipped/Unpaid">➖</span>`;
+    }).join(' ');
+
     const div = document.createElement('div');
     div.className = 'p-card';
 
@@ -756,6 +785,12 @@ function renderPlayerStats() {
         <div style="display:flex; flex-direction:column; gap:2px;">
           <div class="p-name" style="margin:0; line-height:1;">${p}</div>
           <div class="p-winpct" style="margin:0; line-height:1; font-size:11px;">Win Rate: <span>${winpct}%</span></div>
+          
+          <div style="margin-top:4px; display:flex; align-items:center; gap:6px;">
+            <span style="font-size:9px; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">Form:</span>
+            <div style="display:flex; gap:2px;">${formHtml}</div>
+          </div>
+
           <div class="badges-container" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px;">${badgesHtml}</div>
         </div>
       </div>
@@ -835,29 +870,35 @@ function computePlayerStats(){
   return stats;
 } */
 
-  function computePlayerStats(){
+ function computePlayerStats(){
   let stats = {};
   PLAYERS.forEach(p => {
     stats[p] = {
       matchesPlayed: 0, contested: 0, paidContests: 0, wins: 0,
       totalInvested: 0, totalWon: 0, bestPoints: 0, carryFwd: 0,
-      avgPoints: 0, matchesWithPoints: 0, sumPoints: 0 // New fields
+      avgPoints: 0, matchesWithPoints: 0, sumPoints: 0,
+      form: [], streak: 0 // NEW TRACKERS
     };
   });
   
   let cf = {}; PLAYERS.forEach(p => { cf[p] = 0; });
 
+  // Important: We process matches from oldest to newest to calculate streaks correctly
   matches.forEach(m => {
     const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
     if (!matchIsComplete) return; 
 
     PLAYERS.forEach(p => {
       const pd = m.players[p];
-      if (!pd || !pd.joined) return;
-      
       const s = stats[p];
+      
+      if (!pd || !pd.joined) {
+        // If they didn't join, we add a 'skip' to their form
+        if (matchIsComplete) s.form.push('skip');
+        return;
+      }
+      
       s.matchesPlayed++;
-
       if (m.contest === 'yes') {
         s.contested++;
         if (pd.paid) {
@@ -866,21 +907,17 @@ function computePlayerStats(){
         }
         
         const pts = parseFloat(pd.points) || 0;
-        
-        // Update Best Points
         if (pts > s.bestPoints) s.bestPoints = pts;
+        if (pts > 0) { s.sumPoints += pts; s.matchesWithPoints++; }
 
-        // --- NEW LOGIC: Average Points Calculation ---
-        // Only add to average if points > 0
-        if (pts > 0) {
-          s.sumPoints += pts;
-          s.matchesWithPoints++;
-        }
-
+        // --- STREAK & FORM LOGIC ---
         if (m.tiedWinners && m.tiedWinners.includes(p) && m.pool > 0) {
           s.wins++;
+          s.form.push('win');
           const won = m.winningPerWinner || 0;
           if (m.transferred) s.totalWon += won; else cf[p] += won;
+        } else {
+          s.form.push('loss');
         }
       }
     });
@@ -889,14 +926,24 @@ function computePlayerStats(){
   PLAYERS.forEach(p => {
     const s = stats[p];
     s.carryFwd = cf[p] > 0 ? cf[p] : 0;
-    
-    // Final Average Calculation (Total Points / Matches where they scored > 0)
     s.avgPoints = s.matchesWithPoints > 0 ? (s.sumPoints / s.matchesWithPoints).toFixed(2) : "0.00";
+
+    // Calculate current streak (looking backward from the end of the form array)
+    let currentStreak = 0;
+    const reverseForm = [...s.form].reverse();
+    for (let res of reverseForm) {
+      if (res === 'win') currentStreak++;
+      else if (res === 'skip') continue; // Ignore matches they didn't play
+      else break; // Stop at first loss
+    }
+    s.streak = currentStreak;
+
+    // Keep only the last 5 results for the UI
+    s.displayForm = s.form.slice(-5);
   });
   
   return stats;
 }
-
 // ===================== LEADERBOARD =====================
 function renderLeaderboard(){
   const grid = document.getElementById('lb-grid');
