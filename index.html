@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>VOIS Panthers IPL 2026 Fantasy League</title>
+<title>VOIS Panthers IPL 2026 — ADMIN</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -20,40 +20,47 @@ body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;
     radial-gradient(ellipse 100% 100% at 50% 50%,rgba(10,15,30,0) 0%,rgba(10,15,30,0.95) 100%);
   pointer-events:none;z-index:0;}
 
-/* LIVE UPDATE TICKER */
-.ticker-bar{
+/* SYNC BANNER */
+.sync-bar{
   position:sticky;top:0;z-index:200;
-  background:linear-gradient(135deg,#080d1a,#0a0a20);
-  border-bottom:1px solid var(--border);
-  padding:7px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  background:linear-gradient(135deg,#0d1a08,#0a1a0a);
+  border-bottom:2px solid #2ecc71;
+  padding:8px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  box-shadow:0 2px 20px rgba(46,204,113,0.15);
 }
-.ticker-left{display:flex;align-items:center;gap:10px;}
-.live-pill{display:flex;align-items:center;gap:6px;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--green);letter-spacing:1px;}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.2s infinite;}
-.live-dot.stale{background:var(--accent);animation:none;}
-.live-dot.offline{background:var(--red);animation:none;}
-@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
-.ticker-info{font-size:11px;color:var(--text2);}
-.ticker-time{font-size:11px;color:var(--text2);font-family:'Orbitron',sans-serif;}
-.refresh-btn{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:11px;letter-spacing:1px;
-  padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;}
-.refresh-btn:hover{border-color:var(--accent);color:var(--accent);}
+.sync-status{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;letter-spacing:1px;}
+.sync-dot{width:10px;height:10px;border-radius:50%;background:var(--green);animation:syncblink 2s infinite;}
+.sync-dot.error{background:var(--red);animation:none;}
+.sync-dot.syncing{background:var(--accent);animation:syncblink 0.5s infinite;}
+@keyframes syncblink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.sync-info{font-size:11px;color:var(--text2);}
+.setup-btn{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;
+  padding:6px 14px;border:1px solid var(--accent);border-radius:6px;background:transparent;color:var(--accent);cursor:pointer;}
+.setup-btn:hover{background:rgba(245,166,35,0.1);}
 
-/* CONFIG STRIP — shown only when BIN_ID not set */
-.config-strip{
-  background:linear-gradient(135deg,rgba(231,76,60,0.12),rgba(231,76,60,0.06));
-  border:1px solid rgba(231,76,60,0.3);border-radius:10px;
-  padding:14px 18px;margin:16px;font-size:13px;line-height:1.8;
-  position:relative;z-index:10;
-}
-.config-strip b{color:var(--accent);}
-.config-strip code{background:var(--bg3);padding:1px 5px;border-radius:4px;font-size:12px;color:var(--green);}
-.config-strip input{background:var(--bg3);border:1px solid var(--border);color:var(--text);
-  padding:7px 12px;border-radius:7px;font-family:'Rajdhani',sans-serif;font-size:14px;
-  margin:4px 0;width:100%;outline:none;}
-.config-strip input:focus{border-color:var(--accent);}
-.cfg-btn{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;
-  padding:7px 18px;border:none;border-radius:7px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;cursor:pointer;margin-top:6px;}
+/* SETUP MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--card);border:1px solid var(--accent);border-radius:16px;padding:28px;max-width:520px;width:90%;position:relative;}
+.modal h2{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--accent);letter-spacing:3px;margin-bottom:6px;}
+.modal p{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:18px;}
+.modal .steps{background:var(--bg3);border-radius:10px;padding:14px;margin-bottom:18px;font-size:12px;line-height:2;}
+.modal .steps b{color:var(--accent);}
+.modal .steps a{color:var(--blue);text-decoration:none;}
+.modal input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  padding:10px 14px;border-radius:8px;font-family:'Rajdhani',sans-serif;font-size:14px;margin-bottom:10px;outline:none;}
+.modal input:focus{border-color:var(--accent);}
+.modal-btns{display:flex;gap:10px;flex-wrap:wrap;}
+.btn{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;
+  padding:11px 24px;border:none;border-radius:8px;cursor:pointer;transition:all 0.2s;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;}
+.btn-primary:hover{opacity:0.85;transform:translateY(-1px);}
+.btn-danger{background:rgba(231,76,60,0.2);color:var(--red);border:1px solid var(--red);}
+.btn-danger:hover{background:rgba(231,76,60,0.35);}
+.btn-sm{padding:6px 14px;font-size:12px;}
+.btn-success{background:rgba(46,204,113,0.2);color:var(--green);border:1px solid var(--green);}
+.btn-success:hover{background:rgba(46,204,113,0.35);}
+.btn-secondary{background:rgba(136,153,187,0.15);color:var(--text2);border:1px solid var(--border);}
 
 header{position:relative;z-index:10;
   background:linear-gradient(135deg,#0a0f1e 0%,#1a0a00 50%,#0a0f1e 100%);
@@ -64,9 +71,10 @@ header{position:relative;z-index:10;
 .logo-icon{font-size:42px;filter:drop-shadow(0 0 10px var(--accent));}
 .title-main{font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,3.5vw,32px);letter-spacing:3px;color:var(--accent);text-shadow:0 0 20px rgba(245,166,35,0.4);line-height:1;}
 .title-sub{font-family:'Orbitron',sans-serif;font-size:clamp(9px,1.2vw,12px);color:var(--text2);letter-spacing:5px;text-transform:uppercase;margin-top:3px;}
+.admin-badge{background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;padding:4px 12px;border-radius:20px;}
 .season-badge{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;padding:4px 12px;border-radius:20px;}
 
-nav{position:sticky;top:36px;z-index:100;background:rgba(14,21,40,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(10px);}
+nav{position:sticky;top:44px;z-index:100;background:rgba(14,21,40,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(10px);}
 .nav-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;gap:4px;padding:0 20px;overflow-x:auto;}
 .nav-btn{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;
   padding:14px 20px;border:none;background:none;color:var(--text2);cursor:pointer;white-space:nowrap;
@@ -78,7 +86,25 @@ nav{position:sticky;top:36px;z-index:100;background:rgba(14,21,40,0.97);border-b
 .section.active{display:block;}
 .sec-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--accent);
   border-left:4px solid var(--accent);padding-left:14px;margin-bottom:24px;text-shadow:0 0 15px rgba(245,166,35,0.3);}
-
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.3);}
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+@media(max-width:700px){.admin-grid{grid-template-columns:1fr;}}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-group label{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--text2);}
+.form-group input,.form-group select{background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  padding:10px 14px;border-radius:8px;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;outline:none;transition:border-color 0.2s;}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent);}
+.form-group select option{background:var(--bg3);}
+.player-entries{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin:10px 0;}
+.player-entry{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;}
+.player-entry label{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;cursor:pointer;}
+.player-entry input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;}
+.player-entry .sub-checks{display:none;flex-direction:column;gap:5px;margin-top:4px;}
+.player-entry.joined .sub-checks{display:flex;}
+.player-entry .pts-input{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:6px;
+  font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;width:100%;outline:none;}
+.player-entry .pts-input:focus{border-color:var(--accent);}
+.player-entry .sub-label{font-size:11px;color:var(--text2);letter-spacing:1px;}
 .table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
 table{width:100%;border-collapse:collapse;font-size:13px;}
 thead tr{background:var(--bg3);}
@@ -106,9 +132,10 @@ tr:hover td{background:rgba(245,166,35,0.04);}
 .lb-profit{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;text-align:right;}
 .lb-profit.pos{color:var(--green);}.lb-profit.neg{color:var(--red);}.lb-profit.neu{color:var(--text2);}
 .lb-wins{font-size:12px;color:var(--text2);text-align:right;margin-top:4px;}
-.player-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
-.p-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-.p-{background:linear-gradient(135deg,var(--bg3),var(--card2));padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.player-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;}
+.p-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;}
+.p-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,0.4);}
+.p-card-header{background:linear-gradient(135deg,var(--bg3),var(--card2));padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;position:relative;}
 .p-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   font-family:'Bebas Neue',sans-serif;font-size:20px;border:2px solid var(--accent);color:var(--accent);background:rgba(245,166,35,0.08);flex-shrink:0;}
 .p-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;}
@@ -124,256 +151,133 @@ tr:hover td{background:rgba(245,166,35,0.04);}
 .chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;}
 .chart-title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--text2);margin-bottom:16px;}
 .chart-wrap{position:relative;height:280px;}
+.match-form-section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:24px;}
+.form-title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:16px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:16px;}
+.form-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:14px;}
+.divider{height:1px;background:var(--border);margin:16px 0;}
+.save-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.transfer-pending{color:var(--accent);font-size:11px;}.transfer-done{color:var(--green);font-size:11px;}
 .totals-bar{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px;}
 .total-chip{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 18px;flex:1;min-width:130px;text-align:center;}
 .total-chip-label{font-size:11px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;}
 .total-chip-val{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:var(--accent);margin-top:4px;}
 ::-webkit-scrollbar{width:6px;height:6px;}::-webkit-scrollbar-track{background:var(--bg);}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}::-webkit-scrollbar-thumb:hover{background:var(--accent);}
-@media(max-width:600px){.player-cards{grid-template-columns:1fr;}.lb-card{grid-template-columns:40px 1fr auto;}.lb-rank{font-size:26px;}.lb-name{font-size:17px;}}
+@media(max-width:600px){.admin-grid{grid-template-columns:1fr;}.player-entries{grid-template-columns:1fr 1fr;}.lb-card{grid-template-columns:40px 1fr auto;}.lb-rank{font-size:26px;}.lb-name{font-size:17px;}}
+.toast{position:fixed;bottom:30px;right:20px;z-index:999;background:var(--accent);color:#000;
+  font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:1px;
+  padding:12px 24px;border-radius:10px;box-shadow:0 4px 20px rgba(245,166,35,0.4);
+  transform:translateY(100px);opacity:0;transition:all 0.3s;}
+.toast.show{transform:translateY(0);opacity:1;}
 .no-data{text-align:center;color:var(--text2);padding:40px;font-size:16px;letter-spacing:1px;}
 .match-no-badge{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-weight:700;border-radius:6px;padding:2px 8px;font-size:12px;}
-/* .team-tag{background:rgba(52,152,219,0.15);color:var(--blue);border-radius:6px;padding:2px 6px;font-size:11px;} */
-  /* UPGRADED TEAM TAG (Preserving Original Case) */
-.team-tag {
-  background: linear-gradient(135deg, rgba(14, 21, 40, 0.8), rgba(22, 31, 56, 0.8));
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 5px 12px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 1px; /* Reduced slightly so lowercase letters connect naturally */
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-  display: inline-block;
-  white-space: nowrap;
-}
+.team-tag{background:rgba(52,152,219,0.15);color:var(--blue);border-radius:6px;padding:2px 6px;font-size:11px;}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px;animation:blink 1.2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
+.sub-info{font-size:11px;color:var(--text2);margin-top:2px;}
 .cf-tag{background:rgba(245,166,35,0.1);color:var(--accent);border-radius:6px;padding:1px 7px;font-size:11px;border:1px solid rgba(245,166,35,0.3);}
-.transfer-done{background:rgba(46,204,113,0.15);color:var(--green);border:1px solid rgba(46,204,113,0.3);border-radius:12px;padding:2px 10px;font-size:11px;}
-.transfer-pending{background:rgba(245,166,35,0.1);color:var(--accent);border:1px solid rgba(245,166,35,0.3);border-radius:12px;padding:2px 10px;font-size:11px;}
+.highlight{animation:pulse 1.5s ease;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+.cloud-tag{font-size:10px;background:rgba(46,204,113,0.15);color:var(--green);border:1px solid rgba(46,204,113,0.3);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle;}
 
-/* LOADING OVERLAY */
-.loading-overlay{
-  display:none;position:fixed;inset:0;background:rgba(10,15,30,0.85);z-index:300;
-  align-items:center;justify-content:center;flex-direction:column;gap:16px;
-}
-.loading-overlay.show{display:flex;}
-.spinner{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.loading-text{font-family:'Orbitron',sans-serif;font-size:12px;color:var(--text2);letter-spacing:3px;}
+/* APP LINK BUTTON */
+.app-link-btn{display:inline-block;margin-top:6px;background:rgba(245,166,35,0.1);color:var(--accent);
+  border:1px solid rgba(245,166,35,0.4);border-radius:4px;padding:3px 8px;font-size:10px;font-weight:700;
+  text-decoration:none;letter-spacing:1px;text-transform:uppercase;transition:all 0.2s;}
+.app-link-btn:hover{background:rgba(245,166,35,0.25);border-color:var(--accent);}
 
-/* NEW DATA FLASH */
-.flash-new{animation:flashNew 1.5s ease;}
-@keyframes flashNew{0%{background:rgba(46,204,113,0.15);}100%{background:transparent;}}
+.pay-now-btn{display:block;margin:4px auto 0;padding:4px 8px;background:linear-gradient(135deg,#e74c3c,#c0392b);
+  color:white;border:none;border-radius:4px;font-size:10px;font-weight:800;cursor:pointer;text-transform:uppercase;animation:pulse-red 2s infinite;}
+@keyframes pulse-red{0%{box-shadow:0 0 0 0 rgba(231,76,60,0.7);}70%{box-shadow:0 0 0 6px rgba(231,76,60,0);}100%{box-shadow:0 0 0 0 rgba(231,76,60,0);}}
 
-/* BACKGROUND WATERMARK */
-.watermark {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(-30deg);
-  font-family: 'Orbitron', sans-serif;
-  font-size: clamp(80px, 15vw, 200px);
-  color: rgba(255, 255, 255, 0.02); /* Very low opacity */
-  z-index: 0; /* Sits behind your content */
-  pointer-events: none; /* Prevents it from blocking clicks */
-  filter: blur(3px); /* Blurred effect */
-  white-space: nowrap;
-  user-select: none; /* Prevents text highlighting */
-}
+.rank-1-box{padding:10px;border:2px solid var(--accent);border-radius:8px;background:rgba(245,166,35,0.1);text-align:center;}
+.rank-2-box{padding:10px;border:2px solid #bdc3c7;border-radius:8px;background:rgba(189,195,199,0.1);text-align:center;}
 
-/* STICKY FOOTER */
-body {
-  padding-bottom: 40px; /* Prevents content from hiding behind the footer */
-}
-.pb-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: rgba(10, 15, 30, 0.90);
-  border-top: 1px solid var(--border);
-  backdrop-filter: blur(5px);
-  color: var(--text2);
-  text-align: center;
-  padding: 8px 10px;
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 12px;
-  letter-spacing: 2px;
-  z-index: 900;
-}
-.pb-footer span {
-  color: var(--accent);
-  font-weight: 700;
-}
+/* ===== COUNTDOWN TIMER IN MATCH LOG ===== */
+.time-countdown{display:inline-flex;align-items:center;gap:5px;background:rgba(245,166,35,0.12);
+  border:1px solid rgba(245,166,35,0.4);border-radius:8px;padding:4px 8px;font-family:'Orbitron',sans-serif;
+  font-size:10px;font-weight:700;color:var(--accent);white-space:nowrap;animation:tickglow 1s ease-in-out infinite alternate;}
+@keyframes tickglow{from{box-shadow:0 0 4px rgba(245,166,35,0.2);}to{box-shadow:0 0 10px rgba(245,166,35,0.5);}}
+.time-countdown .timer-icon{font-size:12px;}
+.completed-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,rgba(46,204,113,0.15),rgba(46,204,113,0.05));
+  border:1px solid rgba(46,204,113,0.4);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;
+  color:var(--green);letter-spacing:1px;text-transform:uppercase;}
+.scheduled-time{font-size:10px;color:var(--text2);margin-top:2px;letter-spacing:0.5px;}
 
-/* RANK 1 MATCH LOG HIGHLIGHT */
-.rank-1-box {
-  border: 1px solid var(--accent);
-  background: rgba(245, 166, 35, 0.12); /* Subtle golden glow */
-  border-radius: 8px;
-  padding: 6px 2px;
-  box-shadow: 0 0 10px rgba(245, 166, 35, 0.25);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-}
+/* ===== CURRENT FORM STRIP ===== */
+.form-strip{display:flex;align-items:center;gap:3px;margin-top:6px;flex-wrap:wrap;}
+.form-icon{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+.form-win1{background:rgba(245,166,35,0.2);border:1px solid rgba(245,166,35,0.6);}
+.form-win2{background:rgba(192,192,192,0.2);border:1px solid rgba(192,192,192,0.5);}
+.form-loss{background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);}
+.form-skip{background:rgba(136,153,187,0.1);border:1px solid rgba(136,153,187,0.3);color:var(--text2);}
+.form-label{font-size:10px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-right:2px;}
 
-/* MYCIRCLE11 APP LINK BUTTON */
-.app-link-btn {
-  display: inline-block;
-  margin-top: 6px;
-  background: rgba(245, 166, 35, 0.1);
-  color: var(--accent);
-  border: 1px solid rgba(245, 166, 35, 0.4);
-  border-radius: 4px;
-  padding: 3px 8px;
-  font-size: 10px;
-  font-weight: 700;
-  text-decoration: none;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  transition: all 0.2s;
-}
-.app-link-btn:hover {
-  background: rgba(245, 166, 35, 0.25);
-  border-color: var(--accent);
-}
+/* ===== HALL OF FAME BADGES ===== */
+.badges-strip{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+.hof-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;white-space:nowrap;}
+.badge-legend{background:linear-gradient(135deg,rgba(245,166,35,0.25),rgba(232,83,26,0.15));border:1px solid rgba(245,166,35,0.6);color:var(--accent);}
+.badge-sniper{background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(155,89,182,0.1));border:1px solid rgba(155,89,182,0.6);color:#c39bd3;}
+.badge-machine{background:linear-gradient(135deg,rgba(52,152,219,0.25),rgba(52,152,219,0.1));border:1px solid rgba(52,152,219,0.6);color:#7fb3d3;}
+.badge-ironman{background:linear-gradient(135deg,rgba(26,188,156,0.25),rgba(26,188,156,0.1));border:1px solid rgba(26,188,156,0.6);color:#76d7c4;}
+.badge-dragon{background:linear-gradient(135deg,rgba(231,76,60,0.25),rgba(231,76,60,0.1));border:1px solid rgba(231,76,60,0.5);color:#f1948a;}
+.badge-phoenix{background:linear-gradient(135deg,rgba(46,204,113,0.25),rgba(46,204,113,0.1));border:1px solid rgba(46,204,113,0.5);color:#82e0aa;}
+.badge-scholar{background:linear-gradient(135deg,rgba(241,196,15,0.2),rgba(241,196,15,0.05));border:1px solid rgba(241,196,15,0.5);color:#f9e79f;}
 
-.pay-now-btn {
-  display: block;
-  margin: 4px auto 0;
-  padding: 4px 8px;
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 800;
-  cursor: pointer;
-  text-transform: uppercase;
-  animation: pulse-red 2s infinite;
-}
+/* ===== BADGE NOTES SECTION ===== */
+.badge-notes{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-top:24px;}
+.badge-notes-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:var(--accent);margin-bottom:12px;}
+.badge-note-row{display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.badge-note-row:last-child{border-bottom:none;}
+.badge-note-icon{font-size:16px;flex-shrink:0;}
+.badge-note-text{font-size:12px;color:var(--text2);line-height:1.5;}
+.badge-note-text b{color:var(--text);font-size:13px;}
 
-@keyframes pulse-red {
-  0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
-  70% { box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
-}
-
-.badge-icon {
-  background: rgba(255, 215, 0, 0.15);
-  color: #ffd700;
-  border: 1px solid rgba(255, 215, 0, 0.3);
-  font-size: 9px;
-  padding: 2px 6px;
-  border-radius: 12px;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  display: inline-block;
-  white-space: nowrap;
-}
-
-/* Optional: Add a slight glow to the Shark badge */
-.badge-icon[title="Most Profit"] {
-  background: rgba(46, 204, 113, 0.15);
-  color: #2ecc71;
-  border-color: rgba(46, 204, 113, 0.3);
-}
-
-.badge-icon[title*="STREAK"] {
-  animation: pulse-streak 2s infinite;
-}
-
-.streak-badge {
-  background: rgba(255, 69, 0, 0.2) !important;
-  color: #ff4500 !important;
-  border-color: rgba(255, 69, 0, 0.5) !important;
-  animation: pulse-streak 2s infinite;
-}
-
-@keyframes pulse-streak {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-/* Live Pulse Animation */
-.live-badge {
-  background: #ff4757;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 1px;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  animation: live-glow 1.5s infinite;
-}
-
-.live-dot {
-  width: 6px;
-  height: 6px;
-  background: white;
-  border-radius: 50%;
-}
-
-@keyframes live-glow {
-  0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); transform: scale(1); }
-  70% { box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); transform: scale(1.05); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); transform: scale(1); }
-}
-
-.countdown-text {
-  font-size: 10px;
-  color: var(--accent);
-  font-weight: bold;
-  display: block;
-  margin-top: 2px;
-}
-  
+/* ===== AVG POINTS HIGHLIGHT ===== */
+.avg-pts-val{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:#a29bfe;}
 </style>
 </head>
 <body>
 
-<div class="watermark">#PbDawn</div>
-  
-<!-- LOADING OVERLAY -->
-<div class="loading-overlay" id="loading-overlay">
-  <div class="spinner"></div>
-  <div class="loading-text">Loading live data...</div>
-</div>
-
-<!-- LIVE TICKER BAR -->
-<div class="ticker-bar">
-  <div class="ticker-left">
-    <div class="live-pill">
-      <div class="live-dot" id="live-dot"></div>
-      <span id="live-label">LIVE</span>
-    </div>
-    <span class="ticker-info" id="ticker-info">Connecting to cloud...</span>
+<div class="sync-bar" id="sync-bar">
+  <div class="sync-status">
+    <div class="sync-dot" id="sync-dot"></div>
+    <span id="sync-label">Cloud Sync Ready</span>
+    <span class="sync-info" id="sync-info">Last synced: Never</span>
   </div>
-  <div style="display:flex;align-items:center;gap:10px;">
-    <span class="ticker-time" id="ticker-time"></span>
-    <div style="display:flex; flex-direction:column; align-items:flex-end;">
-      <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()">⟳ Refresh</button>
-      <span style="font-size:9px; color:var(--text2); margin-top:3px;" id="refresh-counter">100 left today</span>
-    </div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button class="setup-btn" onclick="openSetup()">⚙️ Cloud Setup</button>
+    <button class="setup-btn" onclick="manualSync()" style="border-color:var(--green);color:var(--green);">☁️ Sync Now</button>
   </div>
 </div>
 
-<!-- CONFIG STRIP (shown when BIN_ID not configured) -->
-<div class="config-strip" id="config-strip" style="display:none;">
-  <b>⚙️ One-time Setup Required</b><br>
-  This public page needs the JSONBin Bin ID to load live data.<br>
-  Enter the same Bin ID you used in the Admin file:
-  <input type="text" id="cfg-binid" placeholder="Paste your Bin ID here..."/>
-  <br>
-  <button class="cfg-btn" onclick="savePublicConfig()">✅ Connect & Load Data</button>
+<div class="modal-overlay" id="setup-modal">
+  <div class="modal">
+    <h2>☁️ Cloud Sync Setup</h2>
+    <p>Connect to <b>JSONBin.io</b> — free cloud JSON storage. No database needed. One-time setup.</p>
+    <div class="steps">
+      <b>Step 1:</b> Go to <a href="https://jsonbin.io" target="_blank">jsonbin.io</a> → Sign up free (Google login works)<br>
+      <b>Step 2:</b> Click <b>"API Keys"</b> in top menu → copy the <b>Master Key</b> (long string starting with <code>$2b$</code>)<br>
+      <b>Step 3:</b> Click <b>"Bins"</b> → <b>"Create a Bin"</b> → paste <code>{"matches":[]}</code> → click <b>Create</b><br>
+      <b>Step 4:</b> In the new bin, click <b>"Share"</b> or the settings icon → set it to <b>Public</b><br>
+      <b>Step 5:</b> The <b>Bin ID</b> is in the URL: <code>jsonbin.io/b/<b>THIS_PART</b></code><br>
+      <b>Step 6:</b> Paste both below and click <b>Test &amp; Save</b>
+    </div>
+    <label style="font-size:11px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;">Bin ID</label>
+    <input type="text" id="input-binid" placeholder="e.g. 6812a3f4acd3cb34f8a1b2c3" style="margin-top:4px;"/>
+    <label style="font-size:11px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-top:8px;display:block;">Master Key (X-Master-Key)</label>
+    <input type="text" id="input-apikey" placeholder="e.g. $2b$10$abcdefghijklmnopqrstuvwx..." style="margin-top:4px;font-size:12px;"/>
+    <div id="test-result" style="display:none;font-size:12px;padding:8px 12px;border-radius:7px;margin:8px 0;"></div>
+    <div class="modal-btns" style="margin-top:12px;">
+      <button class="btn btn-primary" onclick="saveCloudConfig()">🔌 Test &amp; Save</button>
+      <button class="btn btn-secondary btn-sm" onclick="closeSetup()">Cancel</button>
+      <button class="btn btn-danger btn-sm" onclick="clearCloudConfig()">🗑 Reset</button>
+    </div>
+    <p style="margin-top:14px;font-size:11px;color:var(--text2);">
+      ✅ Free tier: 10,000 reads &amp; writes/month — plenty for this app.<br>
+      🔒 Keys stored only in <i>your</i> browser localStorage — never sent anywhere except JSONBin.
+    </p>
+  </div>
 </div>
 
 <header>
@@ -382,10 +286,13 @@ body {
       <div class="logo-icon">🏏</div>
       <div class="title-block">
         <div class="title-main">VOIS Panthers IPL 2026 Fantasy League Tracker</div>
-        <div class="title-sub"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px;animation:blink 1.2s infinite;"></span>MyCircle11 Private Contest · Season 2026</div>
+        <div class="title-sub"><span class="live-dot"></span>MyCircle11 Private Contest · Season 2026</div>
       </div>
     </div>
-    <div class="season-badge">IPL 2026</div>
+    <div style="display:flex;gap:8px;">
+      <div class="admin-badge">🔐 ADMIN</div>
+      <div class="season-badge">IPL 2026</div>
+    </div>
   </div>
 </header>
 
@@ -395,32 +302,74 @@ body {
     <button class="nav-btn" onclick="showSection('playerstats')">👤 Player Stats</button>
     <button class="nav-btn" onclick="showSection('leaderboard')">🏆 Leaderboard</button>
     <button class="nav-btn" onclick="showSection('graphs')">📊 Graphs</button>
+    <button class="nav-btn" onclick="showSection('addmatch')">➕ Add Match</button>
   </div>
 </nav>
 
-<!-- MATCH LOG -->
-<div class="section active" id="sec-matchlog">
+<!-- ===================== ADD MATCH SECTION ===================== -->
+<div class="section" id="sec-addmatch">
+  <div class="sec-title">Add / Edit Match</div>
+  <div class="match-form-section">
+    <div class="form-title">Match Details</div>
+    <div class="form-row">
+      <div class="form-group"><label>Match No.</label><input type="number" id="f-matchno" placeholder="e.g. 1" min="1"/></div>
+      <div class="form-group"><label>Match Date</label><input type="date" id="f-date"/></div>
+      <div class="form-group"><label>Match Time</label>
+        <select id="f-matchtime">
+          <option value="">— Select Time —</option>
+          <option value="15:30">3:30 PM IST</option>
+          <option value="19:30">7:30 PM IST</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Teams Playing</label><input type="text" id="f-teams" placeholder="e.g. MI vs CSK"/></div>
+      <div class="form-group"><label>Team Won</label><input type="text" id="f-winner" placeholder="e.g. MI"/></div>
+      <div class="form-group"><label>Entry Fee (₹)</label><input type="number" id="f-fee" value="50" min="0"/></div>
+      <div class="form-group"><label>Contest Played?</label>
+        <select id="f-contest" onchange="toggleContestFields()">
+          <option value="yes">Yes</option><option value="no">No</option>
+        </select>
+      </div>
+      <div class="form-group"><label>MyCircle11 Link</label><input type="text" id="f-link" placeholder="Paste app link here..."/></div>
+    </div>
+    <div id="player-section">
+      <div class="divider"></div>
+      <div class="form-title">Player Details</div>
+      <div class="sub-info" style="margin-bottom:12px;color:var(--text2);font-size:13px;">✅ Joined = played the contest &nbsp;|&nbsp; 💰 Paid = paid the match fee &nbsp;|&nbsp; Enter MyCircle11 points</div>
+      <div class="player-entries" id="player-entries-wrap"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="save-row">
+      <button class="btn btn-primary" onclick="saveMatch()">💾 Save Match</button>
+      <button class="btn btn-danger btn-sm" onclick="clearForm()">🗑 Clear Form</button>
+      <span id="edit-indicator" style="font-size:13px;color:var(--accent);display:none;">✏️ Editing Match <span id="edit-match-num"></span></span>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MATCH LOG SECTION ===================== -->
+<div class="section" id="sec-matchlog">
   <div class="sec-title">Match Log</div>
   <div class="totals-bar" id="totals-bar"></div>
   <div class="table-wrap">
     <table id="match-table"><thead><tr></tr></thead><tbody id="match-tbody"></tbody></table>
   </div>
-  <div class="no-data" id="no-match-msg" style="display:none;">No match data available yet.</div>
+  <div class="no-data" id="no-match-msg">No matches added yet. Go to ➕ Add Match to get started!</div>
 </div>
 
-<!-- PLAYER STATS -->
+<!-- ===================== PLAYER STATS SECTION ===================== -->
 <div class="section" id="sec-playerstats">
   <div class="sec-title">Player Stats</div>
   <div class="player-cards" id="player-cards-wrap"></div>
+  <div class="badge-notes" id="badge-notes-wrap"></div>
 </div>
 
-<!-- LEADERBOARD -->
+<!-- ===================== LEADERBOARD SECTION ===================== -->
 <div class="section" id="sec-leaderboard">
   <div class="sec-title">Leaderboard</div>
   <div class="lb-grid" id="lb-grid"></div>
 </div>
 
-<!-- GRAPHS -->
+<!-- ===================== GRAPHS SECTION ===================== -->
 <div class="section" id="sec-graphs">
   <div class="sec-title">Graphs & Analytics</div>
   <div class="graph-grid">
@@ -433,183 +382,169 @@ body {
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
 // ===================== CONFIG =====================
 const PLAYERS = ['Ashish','Kalpesh','Nilesh','Prabhat','Pritam','Sudhir','Swapnil'];
 const COLORS = ['#f5a623','#3498db','#2ecc71','#e74c3c','#9b59b6','#1abc9c','#e67e22'];
-// Map each player to their image filename. 
-// Make sure these exact files are uploaded to your GitHub repo!
-const PLAYER_IMAGES = {
-  'Ashish': 'ashish.jpg',
-  'Kalpesh': 'kalpesh.jpg',
-  'Nilesh': 'nilesh.jpeg',
-  'Prabhat': 'prabhat.jpg',
-  'Pritam': 'pritam.jpeg',
-  'Sudhir': 'sudhir.jpg',
-  'Swapnil': 'swapnil.jpg'
-}
 const JSONBIN_BASE = 'https://api.jsonbin.io/v3/b';
-const POLL_INTERVAL = 30000; // poll every 30 seconds
 
-// ⬇️ HARDCODE YOUR BIN ID HERE if you want (so public users don't need to configure)
-// Leave as empty string '' to show the config UI
-const HARDCODED_BIN_ID = '69c84b985fdde574550bf9f7';
-
-let matches = [];
+let matches = JSON.parse(localStorage.getItem('vois_matches') || '[]');
+let editingIdx = null;
 let charts = {};
-let lastVersion = null;
-let pollTimer = null;
-let currentSection = 'matchlog';
+let isSyncing = false;
+let countdownTimers = {};
 
-// ===================== PUBLIC CONFIG =====================
-function getBinId(){
-  return HARDCODED_BIN_ID || localStorage.getItem('vois_public_bin_id') || '';
+// ===================== CLOUD CONFIG =====================
+function getCloudConfig(){
+  return {
+    binId: localStorage.getItem('vois_bin_id') || '',
+    apiKey: localStorage.getItem('vois_api_key') || ''
+  };
 }
 
-function savePublicConfig(){
-  const binId = document.getElementById('cfg-binid').value.trim();
-  if(!binId){ alert('Please enter a valid Bin ID'); return; }
-  localStorage.setItem('vois_public_bin_id', binId);
-  document.getElementById('config-strip').style.display='none';
-  fetchFromCloud();
-  startPolling();
+function openSetup(){
+  const cfg = getCloudConfig();
+  document.getElementById('input-binid').value = cfg.binId;
+  document.getElementById('input-apikey').value = cfg.apiKey;
+  const r = document.getElementById('test-result');
+  if(r) r.style.display = 'none';
+  document.getElementById('setup-modal').classList.add('show');
+}
+function closeSetup(){ document.getElementById('setup-modal').classList.remove('show'); }
+
+async function saveCloudConfig(){
+  const binId = document.getElementById('input-binid').value.trim();
+  const apiKey = document.getElementById('input-apikey').value.trim();
+  if(!binId || !apiKey){ showToast('Please enter both Bin ID and API Key!'); return; }
+  const cleanBinId = binId.replace(/['"]/g,'').trim();
+  const cleanKey = apiKey.replace(/['"]/g,'').trim();
+  localStorage.setItem('vois_bin_id', cleanBinId);
+  localStorage.setItem('vois_api_key', cleanKey);
+  document.getElementById('input-binid').value = cleanBinId;
+  document.getElementById('input-apikey').value = cleanKey;
+  showToast('Testing connection...');
+  const testOk = await testConnection(cleanBinId, cleanKey);
+  if(testOk){ closeSetup(); pushToCloud(); }
 }
 
-function checkConfig(){
-  const binId = getBinId();
-  if(!binId){
-    document.getElementById('config-strip').style.display='block';
-    updateLiveUI('offline','NOT CONFIGURED','Enter Bin ID above to connect');
+async function testConnection(binId, apiKey){
+  const resultEl = document.getElementById('test-result');
+  const show = (ok, msg) => {
+    resultEl.style.display = 'block';
+    resultEl.style.background = ok ? 'rgba(46,204,113,0.1)' : 'rgba(231,76,60,0.1)';
+    resultEl.style.border = ok ? '1px solid rgba(46,204,113,0.3)' : '1px solid rgba(231,76,60,0.3)';
+    resultEl.style.color = ok ? '#2ecc71' : '#e74c3c';
+    resultEl.textContent = msg;
+  };
+  show(null, '🔄 Testing connection...');
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+      headers: { 'X-Master-Key': apiKey }
+    });
+    const text = await res.text();
+    if(res.ok){
+      show(true, '✅ Connection successful! Bin ID and Master Key are correct.');
+      showToast('✅ Connected! Config saved.');
+      return true;
+    }
+    let hint = '';
+    try { const j = JSON.parse(text); hint = j.message || j.error || ''; } catch(e){}
+    const reasons = {
+      401: '❌ HTTP 401 — Invalid Master Key. Re-copy it from JSONBin → API Keys tab. Make sure there are no extra spaces.',
+      403: '❌ HTTP 403 — Key lacks permission. Use the Master Key (not Access Key).',
+      404: '❌ HTTP 404 — Bin ID not found. Check the ID in your JSONBin URL.',
+      429: '⏳ HTTP 429 — Too many requests. Wait 1 minute and try again.',
+    };
+    const msg = reasons[res.status] || `❌ HTTP ${res.status}: ${hint}`;
+    show(false, msg);
+    showToast(msg.substring(0,60));
+    return false;
+  } catch(e){
+    const msg = '❌ Network error: ' + (e.message.includes('fetch') ? 'Check your internet connection.' : e.message);
+    show(false, msg);
     return false;
   }
-  return true;
 }
 
-// ===================== RATE LIMITING =====================
-const DAILY_LIMIT = 20;
-let isCooldown = false;
-
-function getRefreshStats() {
-  const today = new Date().toISOString().split('T')[0];
-  let stats = JSON.parse(localStorage.getItem('vois_refresh_stats') || '{}');
-  if (stats.date !== today) {
-    stats = { date: today, count: 0 }; // Reset for a new day
-  }
-  return stats;
+function clearCloudConfig(){
+  if(!confirm('Reset cloud config? You can re-enter it anytime.')) return;
+  localStorage.removeItem('vois_bin_id');
+  localStorage.removeItem('vois_api_key');
+  updateSyncUI('not-configured','Not configured','Setup required');
+  closeSetup();
 }
 
-function updateRefreshUI() {
-  const stats = getRefreshStats();
-  const left = Math.max(0, DAILY_LIMIT - stats.count);
-  const counterEl = document.getElementById('refresh-counter');
-  if(counterEl) counterEl.textContent = `${left} left today`;
-}
-
-function manualRefresh() {
-  const stats = getRefreshStats();
-  
-  // 1. Check Daily Limit
-  if (stats.count >= DAILY_LIMIT) {
-    alert("⚠️ Daily refresh limit reached to save cloud bandwidth! Please check back tomorrow.");
-    return;
-  }
-
-  // 2. Check Cooldown Spam
-  if (isCooldown) {
-    alert("⏳ Please wait 30 seconds between refreshes.");
-    return;
-  }
-
-  // 3. Process the Refresh
-  stats.count++;
-  localStorage.setItem('vois_refresh_stats', JSON.stringify(stats));
-  updateRefreshUI();
-
-  // 4. Start Cooldown
-  isCooldown = true;
-  const btn = document.getElementById('refresh-btn');
-  btn.style.opacity = '0.5';
-  btn.textContent = '⏳ Wait...';
-  
-  setTimeout(() => {
-    isCooldown = false;
-    btn.style.opacity = '1';
-    btn.textContent = '⟳ Refresh';
-  }, 30000); // 30 seconds cooldown
-
-  // 5. Actually fetch the data
-  fetchFromCloud();
-}
-
-// ===================== CLOUD FETCH =====================
-async function fetchFromCloud(){
-  const binId = getBinId();
-  if(!binId){ checkConfig(); return; }
-
-  updateLiveUI('connecting','CONNECTING...','Fetching latest data...');
-
-  try {
-    // Use ?meta=false to get just the data, no auth needed for public bins
-    const res = await fetch(`${JSONBIN_BASE}/${binId}/latest`, {
-      headers: { 'X-Bin-Meta': 'false' }
-    });
-
-    if(res.status === 401){
-      // Bin requires auth — try without meta header
-      const res2 = await fetch(`${JSONBIN_BASE}/${binId}/latest`);
-      if(!res2.ok) throw new Error(`Access denied (${res2.status}). Make sure your bin is set to PUBLIC in JSONBin.`);
-      const data2 = await res2.json();
-      processCloudData(data2.record || data2);
-      return;
-    }
-
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    processCloudData(data);
-
-  } catch(e){
-    updateLiveUI('offline','⚠️ ERROR', e.message.substring(0,60));
-  }
-}
-
-function processCloudData(data){
-  const newMatches = data.matches || data || [];
-  const newVersion = data.version || data.updatedAt || JSON.stringify(newMatches).length;
-
-  if(newVersion !== lastVersion){
-    lastVersion = newVersion;
-    matches = newMatches;
-    // Re-render current section
-    refreshCurrentSection(true);
-    const updatedAt = data.updatedAt ? new Date(data.updatedAt).toLocaleTimeString('en-IN') : new Date().toLocaleTimeString('en-IN');
-    updateLiveUI('live','🟢 LIVE', `Updated: ${updatedAt} · Click Refresh for latest scores`);
-  } else {
-    updateLiveUI('live','🟢 LIVE', `No changes · Last check: ${new Date().toLocaleTimeString('en-IN')}`);
-  }
-  updateClock();
-}
-
-function updateLiveUI(state, label, info){
-  const dot = document.getElementById('live-dot');
-  const lbl = document.getElementById('live-label');
-  const inf = document.getElementById('ticker-info');
-  dot.className = 'live-dot' + (state==='offline'?' offline': state==='connecting'?' stale':'');
+// ===================== CLOUD SYNC =====================
+function updateSyncUI(state, label, info){
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  const inf = document.getElementById('sync-info');
+  dot.className = 'sync-dot' + (state==='syncing'?' syncing': state==='error'?' error':'');
   lbl.textContent = label;
   inf.textContent = info;
 }
 
-function updateClock(){
-  document.getElementById('ticker-time').textContent = new Date().toLocaleTimeString('en-IN');
+async function pushToCloud(){
+  const cfg = getCloudConfig();
+  if(!cfg.binId || !cfg.apiKey){
+    updateSyncUI('error','Not configured','Click "Cloud Setup" to connect');
+    return false;
+  }
+  isSyncing = true;
+  updateSyncUI('syncing','Syncing to cloud...','Please wait...');
+  try {
+    const payload = { matches, updatedAt: new Date().toISOString(), version: Date.now() };
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': cfg.apiKey,
+        'X-Bin-Versioning': 'false'
+      },
+      body: JSON.stringify(payload)
+    });
+    const text = await res.text();
+    if(!res.ok){
+      let hint = '';
+      try { const j = JSON.parse(text); hint = j.message || j.error || ''; } catch(ex){}
+      const reasons = {
+        401: 'Invalid API Key — recopy full Master Key from JSONBin → API Keys tab',
+        403: 'Forbidden — key lacks permission or wrong key type',
+        404: 'Bin ID not found — check the Bin ID is correct',
+        429: 'Rate limit hit — wait a moment then try again',
+      };
+      throw new Error(reasons[res.status] || `HTTP ${res.status}: ${hint}`);
+    }
+    const now = new Date().toLocaleTimeString('en-IN');
+    updateSyncUI('ok', '☁️ Synced to Cloud', `Last synced: ${now}`);
+    isSyncing = false;
+    return true;
+  } catch(e){
+    const msg = e.message.length > 80 ? e.message.substring(0,80) : e.message;
+    updateSyncUI('error','⚠️ Sync Failed', msg);
+    isSyncing = false;
+    return false;
+  }
 }
 
-function startPolling(){
-  if(pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(fetchFromCloud, POLL_INTERVAL);
+async function manualSync(){
+  if(isSyncing) return;
+  const ok = await pushToCloud();
+  if(ok) showToast('✅ Synced to cloud! Public page will update shortly.');
+  else showToast('❌ Sync failed. Check cloud setup.');
+}
+
+// ===================== SAVE / LOAD =====================
+function saveData(){
+  localStorage.setItem('vois_matches', JSON.stringify(matches));
+  localStorage.setItem('vois_matches_updated', Date.now().toString());
+  pushToCloud();
 }
 
 // ===================== NAVIGATION =====================
 function showSection(id){
-  currentSection = id;
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   var sec = document.getElementById('sec-'+id);
@@ -618,34 +553,265 @@ function showSection(id){
     var oc = b.getAttribute('onclick')||'';
     if(oc.indexOf("'"+id+"'")>=0) b.classList.add('active');
   });
-  refreshCurrentSection(false);
+  if(id==='matchlog') renderMatchLog();
+  if(id==='playerstats') renderPlayerStats();
+  if(id==='leaderboard') renderLeaderboard();
+  if(id==='graphs'){renderMatchLog();setTimeout(renderGraphs,50);}
+  if(id==='addmatch' && editingIdx===null) renderPlayerEntries();
 }
 
-function refreshCurrentSection(isNewData){
-  if(currentSection==='matchlog') renderMatchLog(isNewData);
-  if(currentSection==='playerstats') renderPlayerStats();
-  if(currentSection==='leaderboard') renderLeaderboard();
-  if(currentSection==='graphs'){setTimeout(renderGraphs,50);}
+// ===================== PLAYER ENTRIES FORM =====================
+function renderPlayerEntries(matchData){
+  const wrap = document.getElementById('player-entries-wrap');
+  wrap.innerHTML = '';
+  PLAYERS.forEach((p,i)=>{
+    const pd = matchData ? matchData.players[p] : null;
+    const div = document.createElement('div');
+    div.className = 'player-entry' + (pd&&pd.joined?' joined':'');
+    div.id = 'pe-'+p;
+    div.innerHTML = `
+      <label><input type="checkbox" id="joined-${p}" onchange="togglePlayerJoined('${p}')" ${pd&&pd.joined?'checked':''}/> ${p}</label>
+      <div class="sub-checks" id="sub-${p}">
+        <span class="sub-label">Paid Fee?</span>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="paid-${p}" ${pd&&pd.paid?'checked':''}/> Yes
+        </label>
+        <span class="sub-label">Points</span>
+        <input type="number" class="pts-input" id="pts-${p}" placeholder="0.00" value="${pd?pd.points:''}" min="0" step="0.01"/>
+      </div>`;
+    wrap.appendChild(div);
+  });
+}
+
+function togglePlayerJoined(p){
+  const chk = document.getElementById('joined-'+p);
+  const div = document.getElementById('pe-'+p);
+  if(chk.checked) div.classList.add('joined');
+  else div.classList.remove('joined');
+}
+
+function toggleContestFields(){
+  const v = document.getElementById('f-contest').value;
+  document.getElementById('player-section').style.display = v==='yes'?'block':'none';
+}
+
+// ===================== UPDATED PRIZE LOGIC =====================
+function calculatePrizes(m) {
+  const paidCount = PLAYERS.filter(p => m.players[p] && m.players[p].joined && m.players[p].paid).length;
+  const fee = parseFloat(m.fee) || 0;
+  const matchNum = parseInt(m.matchno) || 0;
+  let distribution = { 1: 0, 2: 0, winnerCount: 0 };
+  if (matchNum >= 3) {
+    if (paidCount >= 2 && paidCount <= 5) {
+      distribution[1] = fee * paidCount;
+      distribution.winnerCount = 1;
+    } else if (paidCount === 6) {
+      distribution[1] = fee * 4;
+      distribution[2] = fee * 2;
+      distribution.winnerCount = 2;
+    } else if (paidCount === 7) {
+      distribution[1] = fee * 5;
+      distribution[2] = fee * 2;
+      distribution.winnerCount = 2;
+    }
+  } else {
+    distribution[1] = fee * paidCount;
+    distribution.winnerCount = (paidCount >= 1) ? 1 : 0;
+  }
+  return distribution;
+}
+
+// ===================== MATCH TIME HELPERS =====================
+function getMatchDateTime(m){
+  if(!m.date) return null;
+  if(!m.matchTime) return null;
+  const [h, min] = m.matchTime.split(':').map(Number);
+  const dt = new Date(m.date + 'T00:00:00');
+  dt.setHours(h, min, 0, 0);
+  return dt;
+}
+
+function formatMatchTimeLabel(timeVal){
+  if(timeVal === '15:30') return '3:30 PM IST';
+  if(timeVal === '19:30') return '7:30 PM IST';
+  return timeVal || '';
+}
+
+// Returns the next upcoming scheduled match (not yet complete, has time set)
+function findNextUpcomingMatch(){
+  const now = new Date();
+  let next = null;
+  matches.forEach(m => {
+    const isComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
+    if(isComplete) return;
+    if(!m.matchTime) return;
+    const dt = getMatchDateTime(m);
+    if(!dt) return;
+    if(dt > now){
+      if(!next || dt < getMatchDateTime(next)) next = m;
+    }
+  });
+  return next;
+}
+
+function formatCountdown(ms){
+  if(ms <= 0) return '00:00:00';
+  const totalSec = Math.floor(ms / 1000);
+  const d = Math.floor(totalSec / 86400);
+  const h = Math.floor((totalSec % 86400) / 3600);
+  const min = Math.floor((totalSec % 3600) / 60);
+  const sec = totalSec % 60;
+  if(d > 0) return `${d}d ${String(h).padStart(2,'0')}h ${String(min).padStart(2,'0')}m`;
+  return `${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+
+// Stop all running timers
+function clearAllCountdownTimers(){
+  Object.values(countdownTimers).forEach(id => clearInterval(id));
+  countdownTimers = {};
+}
+
+// ===================== SAVE MATCH =====================
+function saveMatch(){
+  const matchno = parseInt(document.getElementById('f-matchno').value);
+  const date = document.getElementById('f-date').value;
+  const matchTime = document.getElementById('f-matchtime').value;
+  const teams = document.getElementById('f-teams').value.trim();
+  const teamwon = document.getElementById('f-winner').value.trim();
+  const fee = parseFloat(document.getElementById('f-fee').value)||50;
+  const contest = document.getElementById('f-contest').value;
+  const contestLink = document.getElementById('f-link').value.trim();
+
+  if(!matchno||!date||!teams){showToast('Please fill Match No, Date and Teams!');return;}
+
+  let players = {};
+  let joinedPlayers = [], paidPlayers = [];
+  if(contest==='yes'){
+    PLAYERS.forEach(p=>{
+      const joined = document.getElementById('joined-'+p)?.checked||false;
+      const paid = joined && (document.getElementById('paid-'+p)?.checked||false);
+      const points = joined ? (parseFloat(document.getElementById('pts-'+p)?.value)||0) : 0;
+      players[p] = {joined, paid, points};
+      if(joined) joinedPlayers.push(p);
+      if(paid) paidPlayers.push(p);
+    });
+  } else {
+    PLAYERS.forEach(p=>{players[p]={joined:false,paid:false,points:0};});
+  }
+
+  const prizes = calculatePrizes({matchno, fee, players});
+  const pool = prizes[1] + prizes[2];
+
+  let joinedRanks = {};
+  if(contest==='yes'&&joinedPlayers.length>0){
+    let sorted = joinedPlayers.map(p=>({name:p,pts:players[p].points})).sort((a,b)=>b.pts-a.pts);
+    let rank=1;
+    for(let i=0;i<sorted.length;){
+      let j=i;
+      while(j<sorted.length&&sorted[j].pts===sorted[i].pts) j++;
+      for(let k=i;k<j;k++) joinedRanks[sorted[k].name]=rank;
+      rank=j+1;i=j;
+    }
+  }
+
+  const existing = editingIdx!==null ? matches[editingIdx] : null;
+  const transferred = existing ? existing.transferred : false;
+
+  const matchObj = {
+    matchno, date, matchTime, teams, teamwon, contest, fee, contestLink,
+    joinedCount: joinedPlayers.length, paidCount: paidPlayers.length,
+    pool, players, joinedRanks, transferred
+  };
+
+  if(editingIdx!==null){
+    matches[editingIdx]=matchObj;
+    editingIdx=null;
+    document.getElementById('edit-indicator').style.display='none';
+  } else {
+    const dupIdx = matches.findIndex(m=>m.matchno===matchno);
+    if(dupIdx>=0){matches[dupIdx]=matchObj;}
+    else{matches.push(matchObj);matches.sort((a,b)=>a.matchno-b.matchno);}
+  }
+  saveData();
+  showToast(`Match #${matchno} saved & syncing to cloud! 🏏`);
+  clearForm();
+  renderMatchLog();
+}
+
+function clearForm(){
+  document.getElementById('f-matchno').value='';
+  document.getElementById('f-date').value='';
+  document.getElementById('f-matchtime').value='';
+  document.getElementById('f-teams').value='';
+  document.getElementById('f-winner').value='';
+  document.getElementById('f-fee').value=50;
+  document.getElementById('f-contest').value='yes';
+  document.getElementById('player-section').style.display='block';
+  document.getElementById('f-link').value='';
+  editingIdx=null;
+  document.getElementById('edit-indicator').style.display='none';
+  renderPlayerEntries();
+}
+
+function editMatch(idx){
+  showSection('addmatch');
+  editingIdx = idx;
+  const m = matches[idx];
+  document.getElementById('f-matchno').value = m.matchno;
+  document.getElementById('f-date').value = m.date;
+  document.getElementById('f-matchtime').value = m.matchTime || '';
+  document.getElementById('f-teams').value = m.teams;
+  document.getElementById('f-winner').value = m.teamwon;
+  document.getElementById('f-fee').value = m.fee;
+  document.getElementById('f-contest').value = m.contest;
+  document.getElementById('f-link').value = m.contestLink || '';
+  toggleContestFields();
+  renderPlayerEntries(m);
+  document.getElementById('edit-indicator').style.display = 'inline';
+  document.getElementById('edit-match-num').textContent = m.matchno;
+  window.scrollTo(0, 0);
+}
+
+function deleteMatch(idx){
+  if(!confirm('Delete match #'+matches[idx].matchno+'?')) return;
+  matches.splice(idx,1);
+  saveData();
+  renderMatchLog();
+  showToast('Match deleted & syncing to cloud.');
+}
+
+function toggleTransfer(idx){
+  matches[idx].transferred = !matches[idx].transferred;
+  saveData();
+  renderMatchLog();
+  showToast(matches[idx].transferred ? '✅ Marked as Transferred & syncing!' : '⏳ Marked as Pending & syncing!');
 }
 
 // ===================== RENDER MATCH LOG =====================
 function renderMatchLog(flash) {
+  clearAllCountdownTimers();
+
   const tbody = document.getElementById('match-tbody');
   const msg = document.getElementById('no-match-msg');
   tbody.innerHTML = '';
   const thead = document.querySelector('#match-table thead tr');
   thead.innerHTML = '';
-  const fixedHeaders = ['Match', 'Date', 'Teams', 'Team Won', 'Contest', 'Joined', 'Fee(₹)', 'Pool(₹)', 'Fantasy Winner', 'Payout(₹)', 'Transferred'];
+
+  const fixedHeaders = ['Match', 'Date', 'Teams', 'Team Won', 'Match Time', 'Contest', 'Joined', 'Fee(₹)', 'Pool(₹)', 'Fantasy Winner', 'Payout(₹)', 'Transferred'];
   fixedHeaders.forEach(h => {
     const th = document.createElement('th');
     th.textContent = h;
     thead.appendChild(th);
   });
+
   PLAYERS.forEach(p => {
     const th = document.createElement('th');
     th.innerHTML = `<div style="writing-mode:vertical-rl;transform:rotate(180deg);height:78px;font-size:10px;white-space:nowrap;">${p}<br><span style="color:var(--text2);font-size:9px;">J/P/Pts/Rk</span></div>`;
     thead.appendChild(th);
   });
+
+  const appTh = document.createElement('th'); appTh.textContent = 'MyCircle11 App'; thead.appendChild(appTh);
+  const actTh = document.createElement('th'); actTh.textContent = 'Actions'; thead.appendChild(actTh);
 
   if (matches.length === 0) {
     msg.style.display = 'block';
@@ -654,45 +820,31 @@ function renderMatchLog(flash) {
   }
   msg.style.display = 'none';
 
+  const nextUpcoming = findNextUpcomingMatch();
+
   matches.forEach((m, idx) => {
     const tr = document.createElement('tr');
     if (flash) tr.classList.add('flash-new');
 
-    // 1. Check if the match is officially finished
     const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
+    const prizes = calculatePrizes(m);
 
-    // --- NEW: LIVE & COUNTDOWN LOGIC ---
-    const now = new Date();
-    const matchDate = new Date(m.date);
-    matchDate.setHours(19, 30, 0); // Setting IPL Start Time to 7:30 PM
-    
-    const diff = matchDate - now;
-    const fourHoursInMs = 4 * 60 * 60 * 1000;
-    let statusHtml = '';
-
-    if (!matchIsComplete) {
-      if (diff > 0 && diff < 24 * 60 * 60 * 1000) {
-        // Upcoming today
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        statusHtml = `<span class="countdown-text" style="display:block; font-size:10px; color:var(--accent); font-weight:bold; margin-top:2px;">⏳ Starts in ${hours}h ${mins}m</span>`;
-      } else if (diff <= 0 && Math.abs(diff) < fourHoursInMs) {
-        // LIVE Pulse
-        statusHtml = `<div class="live-badge" style="margin-top:4px;"><span class="live-dot"></span>LIVE</div>`;
-      }
-    }
-
-    // 2. Calculate highest points ONLY if match is complete AND points exist
-    let maxPaidPoints = -1;
+    let winnersInfo = [];
     if (matchIsComplete) {
       PLAYERS.forEach(p => {
-        const pd = m.players[p];
-        if (pd && pd.joined && pd.paid) {
-          const pts = parseFloat(pd.points) || 0;
-          if (pts > maxPaidPoints) maxPaidPoints = pts;
-        }
+        const rk = m.joinedRanks ? m.joinedRanks[p] : null;
+        if (rk === 1) winnersInfo.push({ name: p, rank: 1, prize: prizes[1] });
+        if (rk === 2 && prizes.winnerCount === 2) winnersInfo.push({ name: p, rank: 2, prize: prizes[2] });
       });
     }
+
+    const winnerNamesHtml = winnersInfo.map(w =>
+      `<div style="font-size:11px;">${w.rank===1?'🥇':'🥈'} <b>${w.name}</b></div>`
+    ).join('') || '—';
+
+    const winnerPrizesHtml = winnersInfo.map(w =>
+      `<div style="font-size:11px; color:var(--green);">₹${w.prize.toFixed(2)}</div>`
+    ).join('') || '—';
 
     let playerCells = '';
     PLAYERS.forEach(p => {
@@ -701,79 +853,107 @@ function renderMatchLog(flash) {
         playerCells += `<td style="color:var(--text2);font-size:13px;">—</td>`;
       } else {
         const rank = m.joinedRanks ? m.joinedRanks[p] : '?';
-        const ptsValue = parseFloat(pd.points) || 0;
-        const ptsDisplay = ptsValue.toFixed(2);
+        const isWinnerCell = matchIsComplete && pd.paid && (rank === 1 || (rank === 2 && prizes.winnerCount === 2));
+        const payBtn = !pd.paid ? `<button class="pay-now-btn" style="padding:2px 4px; font-size:8px;" onclick="showPaymentAlert()">💸 Pay Now</button>` : '';
 
-        const isHighestPaid = matchIsComplete &&
-          pd.paid &&
-          ptsValue > 0 &&
-          ptsValue === maxPaidPoints;
-
-        const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
-        const payBtn = !pd.paid ? `<button class="pay-now-btn" onclick="showPaymentAlert()">💸 Pay Now</button>` : '';
-
-        if (isHighestPaid) {
+        if (isWinnerCell) {
+          const medal = rank === 1 ? '🥇' : '🥈';
           playerCells += `<td>
-             <div class="rank-1-box">
-               <div style="font-size:11px;" class="joined-yes">✅ Joined</div>
-               <div class="paid-yes" style="font-size:11px;">💰 Paid</div>
-               <div style="font-size:15px; font-weight:900; color:var(--accent);">${ptsDisplay}</div>
-               <div class="rank-1" style="font-size:13px; font-weight:900;">#${rank}</div>
-             </div>
-           </td>`;
+            <div class="${rank === 1 ? 'rank-1-box' : 'rank-2-box'}">
+              <div style="font-size:9px;">✅ Joined | 💰 Paid</div>
+              <div style="font-size:14px; font-weight:900; color:var(--accent);">${pd.points}</div>
+              <div style="font-size:13px;">${medal} <span style="font-size:10px;">#${rank}</span></div>
+            </div>
+          </td>`;
         } else {
           playerCells += `<td>
-             <div style="font-size:11px;" class="joined-yes">✅ Joined</div>
-             <div class="${pd.paid ? 'paid-yes' : 'paid-no'}" style="font-size:11px;">${pd.paid ? '💰 Paid' : '❌ Unpaid'}</div>
-             <div style="font-size:12px; font-weight:700;">${ptsDisplay}</div>
-             <div class="${rankClass}" style="font-size:11px;">#${rank}</div>
-             ${payBtn}
-           </td>`;
+            <div style="font-size:9px;">✅ Joined</div>
+            <div class="${pd.paid ? 'paid-yes' : 'paid-no'}" style="font-size:9px;">${pd.paid ? '💰 Paid' : '❌ Unpaid'}</div>
+            <div style="font-size:12px; font-weight:700;">${pd.points}</div>
+            <div class="rank-${rank}" style="font-size:10px;">#${rank}</div>
+            ${payBtn}
+          </td>`;
         }
       }
     });
 
-    const isWinner = matchIsComplete && m.fantasyWinner && m.fantasyWinner !== '';
+    const appLinkHtml = m.contestLink ? `<a href="${m.contestLink}" target="_blank" class="app-link-btn" style="font-size:10px; padding:3px 6px;">🏆 App</a>` : `—`;
+
+    // ---- Match Time Cell ----
+    let matchTimeCellHtml = '';
+    const isNextUpcoming = nextUpcoming && nextUpcoming.matchno === m.matchno;
+
+    if (matchIsComplete) {
+      matchTimeCellHtml = `
+        <div class="completed-badge">✅ Completed</div>
+        ${m.matchTime ? `<div class="scheduled-time">${formatMatchTimeLabel(m.matchTime)}</div>` : ''}
+      `;
+    } else if (isNextUpcoming && m.matchTime) {
+      const timerId = 'timer-'+m.matchno;
+      matchTimeCellHtml = `
+        <div class="scheduled-time" style="color:var(--text2);margin-bottom:3px;">${formatMatchTimeLabel(m.matchTime)}</div>
+        <div class="time-countdown" id="${timerId}"><span class="timer-icon">⏱</span> Starts in: <span id="${timerId}-val">--:--:--</span></div>
+      `;
+    } else if (m.matchTime) {
+      matchTimeCellHtml = `<div style="font-size:12px;font-weight:700;color:var(--text);">${formatMatchTimeLabel(m.matchTime)}</div>`;
+    } else {
+      matchTimeCellHtml = `<span style="color:var(--text2);">—</span>`;
+    }
 
     tr.innerHTML = `
-       <td><span class="match-no-badge">#${m.matchno}</span></td>
-       <td style="font-size:12px;">
-         ${formatDate(m.date)}
-         ${statusHtml}
-       </td>
-       <td><span class="team-tag">${m.teams}</span></td>
-       <td style="font-size:12px;font-weight:700;">${m.teamwon || '—'}</td>
-       <td>${m.contest === 'yes' ? '<span class="won-badge">YES</span>' : '<span class="lost-badge">NO</span>'}</td>
-       <td>${m.contest === 'yes' ? m.joinedCount + '/' + PLAYERS.length : '—'}</td>
-       <td>₹${m.fee}</td>
-       <td style="color:var(--green);font-weight:700;">₹${m.pool}</td>
-       <td>${isWinner ? `<span style="color:var(--accent);font-weight:700;">${m.fantasyWinner}</span>` : '—'}</td>
-       <td>${isWinner ? `<span style="color:var(--green);font-weight:700;">₹${m.winningPerWinner.toFixed(2)}</span>` : '—'}</td>
-       <td>${m.contest === 'yes' && isWinner ? (m.transferred ? '<span class="transfer-done">✅ Done</span>' : '<span class="transfer-pending">⏳ Pending</span>') : '—'}</td>
-       ${playerCells}`;
-
+      <td><span class="match-no-badge">#${m.matchno}</span></td>
+      <td style="font-size:11px;">${formatDate(m.date)}</td>
+      <td><span class="team-tag">${m.teams}</span></td>
+      <td style="font-size:11px; font-weight:700;">${m.teamwon || '—'}</td>
+      <td style="min-width:120px;">${matchTimeCellHtml}</td>
+      <td>${m.contest === 'yes' ? '<span class="won-badge">YES</span>' : '<span class="lost-badge">NO</span>'}</td>
+      <td style="font-size:11px;">${m.contest === 'yes' ? m.joinedCount + '/' + PLAYERS.length : '—'}</td>
+      <td style="font-size:11px;">₹${m.fee}</td>
+      <td style="color:var(--green); font-weight:700; font-size:11px;">₹${m.pool}</td>
+      <td style="font-size:11px;">${winnerNamesHtml}</td>
+      <td style="font-size:11px;">${winnerPrizesHtml}</td>
+      <td>
+        ${(m.contest === 'yes' && winnersInfo.length > 0) ?
+          `<button class="btn btn-sm ${m.transferred ? 'btn-success' : 'btn-danger'}" onclick="toggleTransfer(${idx})" style="font-size:9px; padding:2px 5px;">
+            ${m.transferred ? '✅ Done' : '⏳ Pending'}
+          </button>` : '—'}
+      </td>
+      ${playerCells}
+      <td style="text-align:center;">${appLinkHtml}</td>
+      <td>
+        <div style="display:flex; gap:4px; flex-direction:column; align-items:center;">
+          <button class="btn btn-sm btn-primary" style="font-size:9px; padding:2px 6px; width:50px;" onclick="editMatch(${idx})">✏️ Edit</button>
+          <button class="btn btn-sm btn-danger" style="font-size:9px; padding:2px 6px; width:50px;" onclick="deleteMatch(${idx})">🗑 Del</button>
+        </div>
+      </td>`;
     tbody.appendChild(tr);
+
+    // Start countdown timer for the next upcoming match
+    if (isNextUpcoming && m.matchTime) {
+      const timerId = 'timer-'+m.matchno;
+      const targetDt = getMatchDateTime(m);
+      const tick = () => {
+        const el = document.getElementById(timerId+'-val');
+        if(!el){ clearInterval(countdownTimers[timerId]); return; }
+        const diff = targetDt - new Date();
+        el.textContent = formatCountdown(diff);
+        if(diff <= 0){ el.textContent = 'Starting!'; clearInterval(countdownTimers[timerId]); }
+      };
+      tick();
+      countdownTimers[timerId] = setInterval(tick, 1000);
+    }
   });
+
   renderTotals();
 }
 
 function renderTotals(){
   const bar = document.getElementById('totals-bar');
-  
-  // 1. Gatekeeper: Define what a "Finished Match" is
   const finishedMatches = matches.filter(m => m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—');
-
   const totalMatches = matches.length;
-  
-  // 2. Only sum pool for finished matches
   const totalPool = finishedMatches.reduce((s, m) => s + (m.pool || 0), 0);
-  
-  // 3. Only count contests for finished matches
   const totalContests = finishedMatches.filter(m => m.contest === 'yes').length;
-  
-  // 4. Only count Payouts if the match is finished AND transferred is exactly true or "Done"
   const totalTransferred = finishedMatches.filter(m => m.transferred === true || m.transferred === 'Done').length;
-
   bar.innerHTML = `
     <div class="total-chip"><div class="total-chip-label">Total Matches</div><div class="total-chip-val">${totalMatches}</div></div>
     <div class="total-chip"><div class="total-chip-label">Contests Played</div><div class="total-chip-val">${totalContests}</div></div>
@@ -782,266 +962,200 @@ function renderTotals(){
   `;
 }
 
-// ===================== PLAYER STATS =====================
-// ===================== PLAYER STATS =====================
-function renderPlayerStats() {
-  const wrap = document.getElementById('player-cards-wrap');
-  if (!wrap) return;
-  wrap.innerHTML = '';
-  const stats = computePlayerStats();
-
-  // --- 1. FIND THE LEADERS FOR BADGES ---
-  let maxWins = 0, maxAvg = 0, maxBest = 0, maxProfit = -9999;
-  
-  PLAYERS.forEach(p => {
-    const s = stats[p];
-    const profit = s.totalWon - s.totalInvested;
-    const currentAvg = parseFloat(s.avgPoints) || 0;
-    
-    if (s.wins > maxWins) maxWins = s.wins;
-    if (currentAvg > maxAvg) maxAvg = currentAvg;
-    if (s.bestPoints > maxBest) maxBest = s.bestPoints;
-    if (profit > maxProfit) maxProfit = profit;
-  });
-
-  // --- 2. RENDER THE CARDS ---
-  PLAYERS.forEach((p, i) => {
-    const s = stats[p];
-    const profit = s.totalWon - s.totalInvested;
-    const winpct = s.paidContests > 0 ? ((s.wins / s.paidContests) * 100).toFixed(1) : '0.0';
-
-    // Badge Logic
-    let badgesHtml = '';
-    if (s.wins === maxWins && maxWins > 0) 
-      badgesHtml += `<span class="badge-icon" title="Most Wins">🏆 Win Machine</span>`;
-    if (parseFloat(s.avgPoints) === maxAvg && maxAvg > 0) 
-      badgesHtml += `<span class="badge-icon" title="Highest Average">🎯 Mr. Consistent</span>`;
-    if (s.bestPoints === maxBest && maxBest > 0) 
-      badgesHtml += `<span class="badge-icon" title="Highest Single Score">🚀 High Flyer</span>`;
-    if (profit === maxProfit && maxProfit > 0) 
-      badgesHtml += `<span class="badge-icon" style="background:rgba(46,204,113,0.15); color:#2ecc71; border-color:rgba(46,204,113,0.3);" title="Most Profit">💰 The Shark</span>`;
-
-    // Streak Badge
-    if (s.streak >= 2) {
-      badgesHtml += `<span class="badge-icon streak-badge" title="Consecutive Wins">🔥 ${s.streak} STREAK</span>`;
-    }
-
-    // Form Emojis
-    const formHtml = (s.displayForm || []).map(res => {
-      if(res === 'win') return `<span style="font-size:12px;" title="Won">✅</span>`;
-      if(res === 'loss') return `<span style="font-size:12px;" title="Lost">❌</span>`;
-      return `<span style="color:var(--text2); font-size:10px; opacity:0.3;" title="Skipped">➖</span>`;
-    }).join(' ');
-
-    const div = document.createElement('div');
-    div.className = 'p-card';
-
-    let avatarHtml = '';
-    if (typeof PLAYER_IMAGES !== 'undefined' && PLAYER_IMAGES[p]) {
-      avatarHtml = `<div class="p-avatar" style="border-color:${COLORS[i]}; background-image:url('${PLAYER_IMAGES[p]}'); background-size:cover; background-position:center; color:transparent; display:flex; flex-shrink:0; justify-content:center; align-items:center;">${p[0]}</div>`;
-    } else {
-      avatarHtml = `<div class="p-avatar" style="border-color:${COLORS[i]};color:${COLORS[i]};background:${COLORS[i]}22; display:flex; flex-shrink:0; justify-content:center; align-items:center;">${p[0]}</div>`;
-    }
-
-    div.innerHTML = `
-      <div style="display:flex; align-items:center; gap:14px; padding:16px 18px; background:linear-gradient(135deg, var(--bg3), var(--card2)); border-bottom:1px solid var(--border); position:relative;">
-        ${avatarHtml}
-        <div style="display:flex; flex-direction:column; gap:2px;">
-          <div class="p-name" style="margin:0; line-height:1;">${p}</div>
-          <div class="p-winpct" style="margin:0; line-height:1; font-size:11px;">Win Rate: <span>${winpct}%</span> (${s.wins}/${s.paidContests} paid)</div>
-          
-          <div style="margin-top:4px; display:flex; align-items:center; gap:6px;">
-            <span style="font-size:9px; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; font-weight:700;">Form:</span>
-            <div style="display:flex; gap:2px;">${formHtml}</div>
-          </div>
-
-          <div class="badges-container" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px;">${badgesHtml}</div>
-        </div>
-      </div>
-      <div class="p-card-body">
-        <div class="p-stat-row"><span class="p-stat-label">Matches Played</span><span class="p-stat-val accent">${s.matchesPlayed}</span></div>
-        
-        <div class="p-stat-row"><span class="p-stat-label">Contests Joined</span><span class="p-stat-val">${s.contested}</span></div>
-        <div class="p-stat-row"><span class="p-stat-label">Paid Contests</span><span class="p-stat-val">${s.paidContests}</span></div>
-        
-        <div class="p-stat-row"><span class="p-stat-label">Matches Won</span><span class="p-stat-val" style="color:${COLORS[i]}; font-weight:700;">${s.wins}</span></div>
-        <div class="p-stat-row"><span class="p-stat-label">Total Invested</span><span class="p-stat-val red">₹${s.totalInvested}</span></div>
-        <div class="p-stat-row"><span class="p-stat-label">Total Winnings</span><span class="p-stat-val green">₹${s.totalWon.toFixed(2)}</span></div>
-        <div class="p-stat-row"><span class="p-stat-label">Profit / Loss</span>
-          <span class="p-stat-val ${profit >= 0 ? 'green' : 'red'}">${profit >= 0 ? '+' : ''}₹${profit.toFixed(2)}</span></div>
-        <div class="p-stat-row"><span class="p-stat-label">Best Points</span><span class="p-stat-val accent">${s.bestPoints}</span></div>
-        <div class="p-stat-row">
-          <span class="p-stat-label">Avg Points (Per Match)</span>
-          <span class="p-stat-val accent" style="font-weight:800;">${s.avgPoints}</span>
-        </div>
-        
-        ${s.carryFwd > 0 ? `
-          <div class="p-stat-row">
-            <span class="p-stat-label">Carry Forward</span>
-            <span class="p-stat-val"><span class="cf-tag">₹${s.carryFwd.toFixed(2)} pending</span></span>
-          </div>` : ''}
-      </div>
-    `;
-
-    wrap.appendChild(div);
-  });
-}
-/*
+// ===================== COMPUTE PLAYER STATS =====================
 function computePlayerStats(){
   let stats = {};
   PLAYERS.forEach(p=>{
-    stats[p]={matchesPlayed:0,contested:0,paidContests:0,wins:0,totalInvested:0,totalWon:0,bestPoints:0,carryFwd:0};
+    stats[p]={
+      matchesPlayed:0, contested:0, paidContests:0, wins:0,
+      totalInvested:0, totalWon:0, bestPoints:0, carryFwd:0,
+      totalPointsSum:0, pointsMatchCount:0,
+      recentForm:[] // stores last 5 paid contest results: {result:'win1'|'win2'|'loss'|'skip'}
+    };
   });
-  
-  let cf = {};
-  PLAYERS.forEach(p=>{cf[p]=0;});
+  let cf = {}; PLAYERS.forEach(p=>{cf[p]=0;});
 
   matches.forEach(m=>{
-    // 1. GATEKEEPER: Skip calculation if the match is not officially over
-    // This prevents Match #2 (Live/Upcoming) from affecting the Leaderboard
     const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
-    if (!matchIsComplete) return; 
-
+    const prizes = calculatePrizes(m);
     PLAYERS.forEach(p=>{
       const pd=m.players[p];
       if(!pd||!pd.joined) return;
-      
       const s=stats[p];
-      s.matchesPlayed++; // Only increments if match is complete
-
+      s.matchesPlayed++;
       if(m.contest==='yes'){
         s.contested++;
-        // 2. Only count investment if they paid
         if(pd.paid){
           s.paidContests++;
-          if(cf[p]<=0) s.totalInvested+=m.fee;
-          else cf[p]-=m.fee;
-        }
-        
-        // 3. Update best points
-        const currentPts = parseFloat(pd.points) || 0;
-        if(currentPts > s.bestPoints) s.bestPoints = currentPts;
-        
-        // 4. Only count a WIN if the match is complete and they are in tiedWinners
-        if(m.tiedWinners && m.tiedWinners.includes(p) && m.pool > 0){
-          s.wins++;
-          const won = m.winningPerWinner || 0;
-          if(m.transferred) s.totalWon += won;
-          else cf[p] += won;
-        }
-      }
-    });
-  });
+          if(cf[p]<=0) s.totalInvested+=m.fee; else cf[p]-=m.fee;
 
-  PLAYERS.forEach(p=>{stats[p].carryFwd=cf[p]>0?cf[p]:0;});
-  return stats;
-} */
+          // Points tracking (only for paid players with points > 0)
+          if(pd.points > 0){
+            s.totalPointsSum += pd.points;
+            s.pointsMatchCount++;
+          }
 
- function computePlayerStats(){
-  let stats = {};
-  PLAYERS.forEach(p => {
-    stats[p] = {
-      matchesPlayed: 0, contested: 0, paidContests: 0, wins: 0,
-      totalInvested: 0, totalWon: 0, bestPoints: 0, carryFwd: 0,
-      avgPoints: 0, matchesWithPoints: 0, sumPoints: 0,
-      form: [], streak: 0 // NEW TRACKERS
-    };
-  });
-  
-  let cf = {}; PLAYERS.forEach(p => { cf[p] = 0; });
+          if(pd.points > s.bestPoints) s.bestPoints = pd.points;
 
-  // Important: We process matches from oldest to newest to calculate streaks correctly
-  matches.forEach(m => {
-    const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
-    if (!matchIsComplete) return; 
-
-    PLAYERS.forEach(p => {
-      const pd = m.players[p];
-      const s = stats[p];
-      
-      if (!pd || !pd.joined) {
-        // If they didn't join, we add a 'skip' to their form
-        if (matchIsComplete) s.form.push('skip');
-        return;
-      }
-      
-      s.matchesPlayed++;
-      if (m.contest === 'yes') {
-        s.contested++;
-        if (pd.paid) {
-          s.paidContests++;
-          if (cf[p] <= 0) s.totalInvested += m.fee; else cf[p] -= m.fee;
-        }
-        
-        const pts = parseFloat(pd.points) || 0;
-        if (pts > s.bestPoints) s.bestPoints = pts;
-        if (pts > 0) { s.sumPoints += pts; s.matchesWithPoints++; }
-
-        // --- STREAK & FORM LOGIC ---
-        if (m.tiedWinners && m.tiedWinners.includes(p) && m.pool > 0) {
-          s.wins++;
-          s.form.push('win');
-          const won = m.winningPerWinner || 0;
-          if (m.transferred) s.totalWon += won; else cf[p] += won;
+          if(matchIsComplete){
+            const rank = m.joinedRanks ? m.joinedRanks[p] : null;
+            const isRank1Win = (rank === 1);
+            const isRank2Win = (rank === 2 && prizes.winnerCount === 2);
+            if(isRank1Win || isRank2Win){
+              s.wins++;
+              const won = isRank1Win ? prizes[1] : prizes[2];
+              if(m.transferred) s.totalWon+=won; else cf[p]+=won;
+              // Form entry
+              s.recentForm.push(isRank1Win ? 'win1' : 'win2');
+            } else {
+              s.recentForm.push('loss');
+            }
+          }
         } else {
-          s.form.push('loss');
+          // Joined but not paid
+          if(matchIsComplete) s.recentForm.push('skip');
         }
       }
     });
   });
 
-  PLAYERS.forEach(p => {
-    const s = stats[p];
-    s.carryFwd = cf[p] > 0 ? cf[p] : 0;
-    s.avgPoints = s.matchesWithPoints > 0 ? (s.sumPoints / s.matchesWithPoints).toFixed(2) : "0.00";
-
-    // Calculate current streak (looking backward from the end of the form array)
-    let currentStreak = 0;
-    const reverseForm = [...s.form].reverse();
-    for (let res of reverseForm) {
-      if (res === 'win') currentStreak++;
-      else if (res === 'skip') continue; // Ignore matches they didn't play
-      else break; // Stop at first loss
-    }
-    s.streak = currentStreak;
-
-    // Keep only the last 5 results for the UI
-    s.displayForm = s.form.slice(-5);
+  PLAYERS.forEach(p=>{
+    stats[p].carryFwd = cf[p]>0 ? cf[p] : 0;
+    // Keep only last 5 form entries
+    stats[p].recentForm = stats[p].recentForm.slice(-5);
   });
-  
   return stats;
 }
-// ===================== LEADERBOARD =====================
-function renderLeaderboard(){
-  const grid = document.getElementById('lb-grid');
-  grid.innerHTML = '';
+
+// ===================== HALL OF FAME BADGES =====================
+function computeHoFBadges(stats){
+  // Find max holders per category
+  const maxWins = Math.max(...PLAYERS.map(p=>stats[p].wins));
+  const maxBestPts = Math.max(...PLAYERS.map(p=>stats[p].bestPoints));
+  const maxAvgPts = Math.max(...PLAYERS.map(p=>{
+    const s = stats[p];
+    return s.pointsMatchCount > 0 ? s.totalPointsSum / s.pointsMatchCount : 0;
+  }));
+  const maxWinPct = Math.max(...PLAYERS.map(p=>{
+    const s = stats[p];
+    return s.paidContests > 0 ? s.wins / s.paidContests : 0;
+  }));
+  const maxContests = Math.max(...PLAYERS.map(p=>stats[p].paidContests));
+  const maxProfit = Math.max(...PLAYERS.map(p=>stats[p].totalWon - stats[p].totalInvested));
+
+  const badges = {};
+  PLAYERS.forEach(p=>{
+    badges[p] = [];
+    const s = stats[p];
+    const avg = s.pointsMatchCount > 0 ? s.totalPointsSum / s.pointsMatchCount : 0;
+    const winPct = s.paidContests > 0 ? s.wins / s.paidContests : 0;
+    const profit = s.totalWon - s.totalInvested;
+
+    if(maxWins > 0 && s.wins === maxWins) badges[p].push({key:'legend', icon:'👑', label:'The Legend', cls:'badge-legend'});
+    if(maxBestPts > 0 && s.bestPoints === maxBestPts) badges[p].push({key:'sniper', icon:'🎯', label:'Point Sniper', cls:'badge-sniper'});
+    if(maxAvgPts > 0 && avg === maxAvgPts && s.pointsMatchCount > 0) badges[p].push({key:'machine', icon:'⚙️', label:'Points Machine', cls:'badge-machine'});
+    if(maxWinPct > 0 && winPct === maxWinPct && s.paidContests >= 2) badges[p].push({key:'ironman', icon:'🛡️', label:'Iron Consistent', cls:'badge-ironman'});
+    if(maxContests > 0 && s.paidContests === maxContests) badges[p].push({key:'dragon', icon:'🐉', label:'Dragon Grinder', cls:'badge-dragon'});
+    if(maxProfit > 0 && profit === maxProfit) badges[p].push({key:'phoenix', icon:'🔥', label:'Phoenix Profit', cls:'badge-phoenix'});
+    if(s.wins >= 3) badges[p].push({key:'scholar', icon:'📜', label:'Hat-Trick Hero', cls:'badge-scholar'});
+  });
+  return badges;
+}
+
+// ===================== RENDER PLAYER STATS =====================
+function renderPlayerStats(){
+  const wrap = document.getElementById('player-cards-wrap');
+  wrap.innerHTML='';
   const stats = computePlayerStats();
-  
-  // 1. Sort the players by Profit (Highest to Lowest)
-  const sorted = PLAYERS.map((p,i)=>({name:p, color:COLORS[i], ...stats[p]}))
-    .sort((a,b)=>(b.totalWon-b.totalInvested)-(a.totalWon-a.totalInvested));
+  const hofBadges = computeHoFBadges(stats);
 
-  // 2. Track the actual rank to handle ties properly
-  let currentRank = 1;
-  let lastProfit = null;
+  PLAYERS.forEach((p,i)=>{
+    const s=stats[p];
+    const profit=s.totalWon-s.totalInvested;
+    const winpct = s.paidContests>0 ? ((s.wins/s.paidContests)*100).toFixed(1) : '0.0';
+    const avgPts = s.pointsMatchCount > 0 ? (s.totalPointsSum / s.pointsMatchCount).toFixed(1) : '—';
 
-  sorted.forEach((p, i) => {
-    const profit = p.totalWon - p.totalInvested;
-    const winpct = p.paidContests > 0 ? ((p.wins / p.paidContests) * 100).toFixed(1) : '0.0';
-    
-    // 3. If this player has less profit than the previous player, increase the rank
-    if (lastProfit !== null && profit < lastProfit) {
-      currentRank++;
+    // Current Form HTML (last 5)
+    let formHtml = '<div class="form-strip"><span class="form-label">Form:</span>';
+    if(s.recentForm.length === 0){
+      formHtml += '<span style="font-size:11px;color:var(--text2);">No data yet</span>';
+    } else {
+      s.recentForm.forEach(r => {
+        if(r === 'win1') formHtml += `<div class="form-icon form-win1" title="1st Place">🥇</div>`;
+        else if(r === 'win2') formHtml += `<div class="form-icon form-win2" title="2nd Place">🥈</div>`;
+        else if(r === 'loss') formHtml += `<div class="form-icon form-loss" title="Did not win">❌</div>`;
+        else if(r === 'skip') formHtml += `<div class="form-icon form-skip" title="Joined but not paid">-</div>`;
+      });
+    }
+    formHtml += '</div>';
+
+    // Badges HTML
+    const myBadges = hofBadges[p] || [];
+    let badgesHtml = '';
+    if(myBadges.length > 0){
+      badgesHtml = `<div class="badges-strip">${myBadges.map(b=>`<span class="hof-badge ${b.cls}">${b.icon} ${b.label}</span>`).join('')}</div>`;
     }
 
-    // 4. Assign medals and CSS classes based on true rank (not loop index)
-    const rankClass = currentRank === 1 ? 'rank1' : currentRank === 2 ? 'rank2' : currentRank === 3 ? 'rank3' : '';
-    const rankDisplay = currentRank === 1 ? '🥇' : currentRank === 2 ? '🥈' : currentRank === 3 ? '🥉' : currentRank;
-    
-    const div = document.createElement('div');
-    div.className = `lb-card ${rankClass}`;
-    div.innerHTML = `
-      <div class="lb-rank">${rankDisplay}</div>
+    const div=document.createElement('div');
+    div.className='p-card';
+    div.innerHTML=`
+      <div class="p-card-header">
+        <div class="p-avatar" style="border-color:${COLORS[i]};color:${COLORS[i]};background:${COLORS[i]}22;">${p[0]}</div>
+        <div style="flex:1;">
+          <div class="p-name">${p}</div>
+          <div class="p-winpct">Win Rate: <span>${winpct}%</span> (${s.wins}/${s.paidContests} paid)</div>
+          ${formHtml}
+        </div>
+      </div>
+      <div class="p-card-body">
+        ${badgesHtml}
+        <div class="p-stat-row"><span class="p-stat-label">Matches Played</span><span class="p-stat-val accent">${s.matchesPlayed}</span></div>
+        <div class="p-stat-row"><span class="p-stat-label">Contests Joined</span><span class="p-stat-val">${s.contested}</span></div>
+        <div class="p-stat-row"><span class="p-stat-label">Paid Contests</span><span class="p-stat-val">${s.paidContests}</span></div>
+        <div class="p-stat-row"><span class="p-stat-label">Matches Won</span><span class="p-stat-val" style="color:${COLORS[i]};">${s.wins}</span></div>
+        <div class="p-stat-row"><span class="p-stat-label">Best Points</span><span class="p-stat-val accent">${s.bestPoints}</span></div>
+        <div class="p-stat-row"><span class="p-stat-label">Avg Points / Match</span><span class="p-stat-val"><span class="avg-pts-val">${avgPts}</span></span></div>
+        <div class="p-stat-row"><span class="p-stat-label">Total Invested</span><span class="p-stat-val red">₹${s.totalInvested}</span></div>
+        <div class="p-stat-row"><span class="p-stat-label">Total Winnings</span><span class="p-stat-val green">₹${s.totalWon.toFixed(2)}</span></div>
+        <div class="p-stat-row"><span class="p-stat-label">Profit / Loss</span>
+          <span class="p-stat-val ${profit>=0?'green':'red'}">${profit>=0?'+':''}₹${profit.toFixed(2)}</span></div>
+        ${s.carryFwd>0?`<div class="p-stat-row"><span class="p-stat-label">Carry Forward</span><span class="p-stat-val"><span class="cf-tag">₹${s.carryFwd.toFixed(2)} pending</span></span></div>`:''}
+      </div>`;
+    wrap.appendChild(div);
+  });
+
+  // Render Badge Notes
+  const notesWrap = document.getElementById('badge-notes-wrap');
+  notesWrap.innerHTML = `
+    <div class="badge-notes-title">🏆 Hall of Fame — Badge Guide</div>
+    <div class="badge-note-row"><div class="badge-note-icon">👑</div><div class="badge-note-text"><b>The Legend</b> — Awarded to the player with the most contest wins this season. The undisputed king of the leaderboard.</div></div>
+    <div class="badge-note-row"><div class="badge-note-icon">🎯</div><div class="badge-note-text"><b>Point Sniper</b> — Holds the single highest score in any paid contest this season. One match, peak performance.</div></div>
+    <div class="badge-note-row"><div class="badge-note-icon">⚙️</div><div class="badge-note-text"><b>Points Machine</b> — Has the best Average Points per Match (calculated only for paid contests where points > 0). Consistently high scorer.</div></div>
+    <div class="badge-note-row"><div class="badge-note-icon">🛡️</div><div class="badge-note-text"><b>Iron Consistent</b> — Holds the highest Win % among paid contests (minimum 2 paid entries). The most reliable winner.</div></div>
+    <div class="badge-note-row"><div class="badge-note-icon">🐉</div><div class="badge-note-text"><b>Dragon Grinder</b> — Has participated in the most paid contests this season. Never backs down from a fight.</div></div>
+    <div class="badge-note-row"><div class="badge-note-icon">🔥</div><div class="badge-note-text"><b>Phoenix Profit</b> — Leads in total profit (Winnings minus Investment). The most financially dominant player.</div></div>
+    <div class="badge-note-row"><div class="badge-note-icon">📜</div><div class="badge-note-text"><b>Hat-Trick Hero</b> — Has won 3 or more contests this season. A serial winner who knows how to close.</div></div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text2);border-top:1px solid var(--border);padding-top:10px;">
+      ℹ️ <b style="color:var(--text);">Current Form</b>: Shows last 5 paid contest results. 🥇 = 1st Rank, 🥈 = 2nd Rank, ❌ = Did not win, <span style="font-size:12px;font-weight:700;color:var(--text2);">-</span> = Joined but did not pay entry fee.
+    </div>
+  `;
+}
+
+// ===================== LEADERBOARD =====================
+function renderLeaderboard(){
+  const grid=document.getElementById('lb-grid');
+  grid.innerHTML='';
+  const stats=computePlayerStats();
+  const sorted=PLAYERS.map((p,i)=>({name:p,color:COLORS[i],...stats[p]}))
+    .sort((a,b)=>(b.totalWon-b.totalInvested)-(a.totalWon-a.totalInvested));
+  sorted.forEach((p,i)=>{
+    const profit=p.totalWon-p.totalInvested;
+    const winpct=p.paidContests>0?((p.wins/p.paidContests)*100).toFixed(1):'0.0';
+    const rankClass=i===0?'rank1':i===1?'rank2':i===2?'rank3':'';
+    const medals=['🥇','🥈','🥉'];
+    const div=document.createElement('div');div.className=`lb-card ${rankClass}`;
+    div.innerHTML=`
+      <div class="lb-rank">${medals[i]||i+1}</div>
       <div>
         <div class="lb-name" style="color:${p.color};">${p.name}</div>
         <div class="lb-stats">
@@ -1051,21 +1165,17 @@ function renderLeaderboard(){
           <div class="lb-stat">Win%: <span>${winpct}%</span></div>
           <div class="lb-stat">Invested: <span>₹${p.totalInvested}</span></div>
           <div class="lb-stat">Won: <span>₹${p.totalWon.toFixed(2)}</span></div>
-          ${p.carryFwd > 0 ? `<div class="lb-stat">Carry Fwd: <span class="cf-tag">₹${p.carryFwd.toFixed(2)}</span></div>` : ''}
+          ${p.carryFwd>0?`<div class="lb-stat">Carry Fwd: <span class="cf-tag">₹${p.carryFwd.toFixed(2)}</span></div>`:''}
         </div>
       </div>
       <div>
-        <div class="lb-profit ${profit > 0 ? 'pos' : profit < 0 ? 'neg' : 'neu'}">${profit >= 0 ? '+' : ''}₹${profit.toFixed(2)}</div>
-        <div class="lb-wins">${p.wins} win${p.wins !== 1 ? 's' : ''}</div>
+        <div class="lb-profit ${profit>0?'pos':profit<0?'neg':'neu'}">${profit>=0?'+':''}₹${profit.toFixed(2)}</div>
+        <div class="lb-wins">${p.wins} win${p.wins!==1?'s':''}</div>
       </div>`;
-    
     grid.appendChild(div);
-    
-    // 5. Save this profit to compare against the next player
-    lastProfit = profit;
   });
 }
-  
+
 // ===================== GRAPHS =====================
 function renderGraphs(){
   const stats=computePlayerStats();destroyCharts();
@@ -1075,7 +1185,16 @@ function renderGraphs(){
     const data=matches.map(m=>{
       const pd=m.players[p];
       if(!pd||!pd.joined) return cum;
-      if(m.contest==='yes'){if(pd.paid) cum-=m.fee;if(m.tiedWinners&&m.tiedWinners.includes(p)&&m.transferred) cum+=m.winningPerWinner||0;}
+      const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
+      if(m.contest==='yes'){
+         if(pd.paid) cum-=m.fee;
+         if(matchIsComplete && pd.paid && m.transferred){
+           const prizes = calculatePrizes(m);
+           const rank = m.joinedRanks ? m.joinedRanks[p] : null;
+           if(rank === 1) cum += prizes[1];
+           else if(rank === 2 && prizes.winnerCount === 2) cum += prizes[2];
+         }
+      }
       return parseFloat(cum.toFixed(2));
     });
     return {label:p,data,borderColor:COLORS[i],backgroundColor:COLORS[i]+'22',fill:false,tension:0.3,pointRadius:5,pointHoverRadius:7,borderWidth:2};
@@ -1088,7 +1207,7 @@ function renderGraphs(){
   charts.invwin=new Chart(document.getElementById('chart-inv-win'),{type:'bar',data:invWinData,options:chartOpts('₹','Amount')});
   charts.wins=new Chart(document.getElementById('chart-wins'),{type:'doughnut',data:{labels:PLAYERS,datasets:[{data:PLAYERS.map(p=>stats[p].wins),backgroundColor:COLORS,borderColor:'#1b2540',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8899bb',font:{family:'Rajdhani',size:13}}}}}});
   const pointsDatasets=PLAYERS.map((p,i)=>({label:p,data:matches.map(m=>m.players[p]&&m.players[p].joined?m.players[p].points:null),borderColor:COLORS[i],backgroundColor:COLORS[i]+'33',spanGaps:false,tension:0.3,pointRadius:5,borderWidth:2}));
-  charts.pointrenderMatchLogs=new Chart(document.getElementById('chart-points'),{type:'line',data:{labels,datasets:pointsDatasets},options:chartOpts('pts','Points')});
+  charts.points=new Chart(document.getElementById('chart-points'),{type:'line',data:{labels,datasets:pointsDatasets},options:chartOpts('pts','Points')});
   charts.winpct=new Chart(document.getElementById('chart-winpct'),{type:'polarArea',data:{labels:PLAYERS,datasets:[{data:PLAYERS.map(p=>stats[p].paidContests>0?parseFloat(((stats[p].wins/stats[p].paidContests)*100).toFixed(1)):0),backgroundColor:COLORS.map(c=>c+'99'),borderColor:COLORS,borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8899bb',font:{family:'Rajdhani',size:12}}}},scales:{r:{ticks:{color:'#8899bb'},grid:{color:'#1e2d50'}}}}});
   charts.pool=new Chart(document.getElementById('chart-pool'),{type:'bar',data:{labels,datasets:[{label:'Pool (₹)',data:matches.map(m=>m.pool),backgroundColor:matches.map(m=>m.pool>0?'rgba(245,166,35,0.5)':'rgba(100,100,100,0.3)'),borderColor:matches.map(m=>m.pool>0?'#f5a623':'#555'),borderWidth:1}]},options:chartOpts('₹','Pool Amount')});
 }
@@ -1099,60 +1218,19 @@ function chartOpts(unit,label){
     scales:{x:{ticks:{color:'#8899bb',font:{family:'Rajdhani',size:11}},grid:{color:'#1e2d5044'}},y:{ticks:{color:'#8899bb',font:{family:'Rajdhani',size:11},callback:v=>`${unit}${v}`},grid:{color:'#1e2d5044'}}}};
 }
 function destroyCharts(){Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});charts={};}
+function formatDate(d){if(!d) return '—';const dt=new Date(d);return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+function showPaymentAlert() {alert(`🏏 IPL Season is On! 🏆\n\nIt looks like your entry fee is still pending. To keep the game fair and fun, please complete your payment! \n\n📍 Where to Pay:\nCheck the pinned message in our WhatsApp group: "_VOIS Dream 11". \n\n📸 Payment Method:\nSimply scan the UPI QR code available there and complete the transfer. \n\nGood luck with the match! See you on the leaderboard! 🔥`);}
 
-function formatDate(d){
-  if(!d) return '—';
-  const dt=new Date(d);
-  return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});
-}
-
-function showPaymentAlert() {
-  const message = `🏏 IPL Season is On! 🏆\n\n` +
-    `It looks like your entry fee is still pending. To keep the game fair and fun, please complete your payment! \n\n` +
-    `📍 Where to Pay:\nCheck the pinned message in our WhatsApp group: "_VOIS Dream 11". \n\n` +
-    `📸 Payment Method:\nSimply scan the UPI QR code available there and complete the transfer. \n\n` +
-    `Good luck with the match! See you on the leaderboard! 🔥`;
-  
-  alert(message);
-}
-
-function getMatchStatus(matchDateStr) {
-  const now = new Date();
-  const matchDate = new Date(matchDateStr);
-  
-  // Assume IPL start time is 7:30 PM (19:30) IST
-  matchDate.setHours(19, 30, 0);
-  
-  const diff = matchDate - now;
-  const fourHoursInMs = 4 * 60 * 60 * 1000;
-
-  if (diff > 0 && diff < 24 * 60 * 60 * 1000) {
-    // Upcoming today - Show countdown
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return { status: 'upcoming', text: `Starts in ${hours}h ${mins}m` };
-  } else if (diff <= 0 && Math.abs(diff) < fourHoursInMs) {
-    // Match started less than 4 hours ago
-    return { status: 'live', text: 'LIVE' };
-  }
-  return { status: 'past', text: '' };
-}
-
-// ===================== INIT =====================
 (function init(){
-  updateClock();
-  updateRefreshUI();
-  setInterval(updateClock, 1000);
-  if(checkConfig()){
-    fetchFromCloud();
-    // startPolling();
-  }
+  document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+  renderPlayerEntries();
+  renderMatchLog();
+  showSection('matchlog');
+  const cfg = getCloudConfig();
+  if(!cfg.binId || !cfg.apiKey){updateSyncUI('error','☁️ Cloud not configured','Click "Cloud Setup" to connect');}
+  else {updateSyncUI('ok','☁️ Cloud configured','Ready to sync on save');}
 })();
 </script>
-
-<div class="pb-footer">
-  &copy;&trade; Designed and Developed by <span>Prabhat Singh</span>
-</div>
-
 </body>
 </html>
