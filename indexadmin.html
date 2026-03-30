@@ -1222,51 +1222,56 @@ function formatDate(d){if(!d) return '—';const dt=new Date(d);return dt.toLoca
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 function showPaymentAlert() {alert(`🏏 IPL Season is On! 🏆\n\nIt looks like your entry fee is still pending. To keep the game fair and fun, please complete your payment! \n\n📍 Where to Pay:\nCheck the pinned message in our WhatsApp group: "_VOIS Dream 11". \n\n📸 Payment Method:\nSimply scan the UPI QR code available there and complete the transfer. \n\nGood luck with the match! See you on the leaderboard! 🔥`);}
 
-// ===================== UPDATED INITIALIZATION WITH AUTO-PULL =====================
+// ===================== BULLETPROOF ADMIN PULL =====================
 async function pullFromCloud() {
   const cfg = getCloudConfig();
-  if (!cfg.binId || !cfg.apiKey) return;
+  // Don't attempt pull if the user hasn't set up their Bin ID/Key yet
+  if (!cfg.binId || !cfg.apiKey) {
+    updateSyncUI('error', 'Cloud not configured', 'Click "Cloud Setup" to connect');
+    return;
+  }
 
-  updateSyncUI('syncing', 'Checking Cloud...', 'Fetching latest data...');
+  updateSyncUI('syncing', 'Fetching Cloud...', 'Syncing with other devices...');
   try {
     const res = await fetch(`${JSONBIN_BASE}/${cfg.binId}/latest`, {
-      headers: { 'X-Master-Key': cfg.apiKey }
-    });
-    
-    if (res.ok) {
-      const json = await res.json();
-      // Check if cloud data is newer or exists
-      if (json.record && json.record.matches) {
-        matches = json.record.matches;
-        localStorage.setItem('vois_matches', JSON.stringify(matches));
-        renderMatchLog();
-        const now = new Date().toLocaleTimeString('en-IN');
-        updateSyncUI('ok', '☁️ Cloud Synced', `Last pulled: ${now}`);
+      headers: { 
+        'X-Master-Key': cfg.apiKey,
+        'X-Bin-Meta': 'false' // Forces JSONBin to provide clean data
       }
-    } else {
-      throw new Error("Failed to fetch");
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    
+    // Robust data extraction: checks record, matches, or raw array
+    const cloudMatches = data.record ? data.record.matches : (data.matches || data);
+
+    if (Array.isArray(cloudMatches)) {
+      matches = cloudMatches; // Updates the global app data
+      localStorage.setItem('vois_matches', JSON.stringify(matches)); // Syncs local backup
+      renderMatchLog(); // Refreshes the UI table immediately
+      
+      const now = new Date().toLocaleTimeString('en-IN');
+      updateSyncUI('ok', '☁️ Cloud Synced', `Last pull: ${now}`);
     }
   } catch (e) {
-    updateSyncUI('error', '⚠️ Pull Failed', 'Showing local data only');
+    updateSyncUI('error', '⚠️ Pull Failed', e.message);
     console.error("Sync Error:", e);
   }
 }
 
+// ===================== UPDATED INITIALIZATION =====================
 (function init(){
+  // Set default date to today
   document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
-  renderPlayerEntries();
   
-  // 1. Render local data first so the page isn't blank
+  // Initialize UI components
+  renderPlayerEntries();
   renderMatchLog();
   showSection('matchlog');
   
-  const cfg = getCloudConfig();
-  if(!cfg.binId || !cfg.apiKey) {
-    updateSyncUI('error','☁️ Cloud not configured','Click "Cloud Setup" to connect');
-  } else {
-    // 2. Immediately try to pull fresh data from the cloud
-    pullFromCloud();
-  }
+  // Trigger the cloud pull immediately on page load
+  pullFromCloud();
 })();
   
   /*
