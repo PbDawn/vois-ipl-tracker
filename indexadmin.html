@@ -220,12 +220,26 @@ tr:hover td{background:rgba(245,166,35,0.04);}
   70% { box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); }
   100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
 }
+
+.rank-1-box {
+  padding: 10px;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  background: rgba(245, 166, 35, 0.1);
+  text-align: center;
+}
+.rank-2-box {
+  padding: 10px;
+  border: 2px solid #bdc3c7;
+  border-radius: 8px;
+  background: rgba(189, 195, 199, 0.1);
+  text-align: center;
+}
   
 </style>
 </head>
 <body>
 
-<!-- SYNC STATUS BAR -->
 <div class="sync-bar" id="sync-bar">
   <div class="sync-status">
     <div class="sync-dot" id="sync-dot"></div>
@@ -238,7 +252,6 @@ tr:hover td{background:rgba(245,166,35,0.04);}
   </div>
 </div>
 
-<!-- CLOUD SETUP MODAL -->
 <div class="modal-overlay" id="setup-modal">
   <div class="modal">
     <h2>☁️ Cloud Sync Setup</h2>
@@ -294,7 +307,6 @@ tr:hover td{background:rgba(245,166,35,0.04);}
   </div>
 </nav>
 
-<!-- ADD MATCH -->
 <div class="section" id="sec-addmatch">
   <div class="sec-title">Add / Edit Match</div>
   <div class="match-form-section">
@@ -327,7 +339,6 @@ tr:hover td{background:rgba(245,166,35,0.04);}
   </div>
 </div>
 
-<!-- MATCH LOG -->
 <div class="section" id="sec-matchlog">
   <div class="sec-title">Match Log</div>
   <div class="totals-bar" id="totals-bar"></div>
@@ -337,19 +348,16 @@ tr:hover td{background:rgba(245,166,35,0.04);}
   <div class="no-data" id="no-match-msg">No matches added yet. Go to ➕ Add Match to get started!</div>
 </div>
 
-<!-- PLAYER STATS -->
 <div class="section" id="sec-playerstats">
   <div class="sec-title">Player Stats</div>
   <div class="player-cards" id="player-cards-wrap"></div>
 </div>
 
-<!-- LEADERBOARD -->
 <div class="section" id="sec-leaderboard">
   <div class="sec-title">Leaderboard</div>
   <div class="lb-grid" id="lb-grid"></div>
 </div>
 
-<!-- GRAPHS -->
 <div class="section" id="sec-graphs">
   <div class="sec-title">Graphs & Analytics</div>
   <div class="graph-grid">
@@ -398,7 +406,6 @@ async function saveCloudConfig(){
   const apiKey = document.getElementById('input-apikey').value.trim();
   if(!binId || !apiKey){ showToast('Please enter both Bin ID and API Key!'); return; }
 
-  // Strip accidental whitespace or quotes users may copy
   const cleanBinId = binId.replace(/['"]/g,'').trim();
   const cleanKey = apiKey.replace(/['"]/g,'').trim();
 
@@ -408,7 +415,6 @@ async function saveCloudConfig(){
   document.getElementById('input-binid').value = cleanBinId;
   document.getElementById('input-apikey').value = cleanKey;
 
-  // Test with a GET first before closing modal
   showToast('Testing connection...');
   const testOk = await testConnection(cleanBinId, cleanKey);
   if(testOk){
@@ -528,7 +534,6 @@ async function manualSync(){
 function saveData(){
   localStorage.setItem('vois_matches', JSON.stringify(matches));
   localStorage.setItem('vois_matches_updated', Date.now().toString());
-  // Auto push to cloud
   pushToCloud();
 }
 
@@ -584,6 +589,26 @@ function toggleContestFields(){
   document.getElementById('player-section').style.display = v==='yes'?'block':'none';
 }
 
+// ===================== NEW PRIZE LOGIC =====================
+function calculatePrizes(m) {
+  const paidCount = PLAYERS.filter(p => m.players[p] && m.players[p].joined && m.players[p].paid).length;
+  const fee = parseFloat(m.fee) || 0;
+  let distribution = { 1: 0, 2: 0, winnerCount: 0 };
+  if (paidCount >= 2 && paidCount <= 5) {
+    distribution[1] = fee * paidCount;
+    distribution.winnerCount = 1;
+  } else if (paidCount === 6) {
+    distribution[1] = fee * 4;
+    distribution[2] = fee * 2;
+    distribution.winnerCount = 2;
+  } else if (paidCount === 7) {
+    distribution[1] = fee * 5;
+    distribution[2] = fee * 2;
+    distribution.winnerCount = 2;
+  }
+  return distribution;
+}
+
 // ===================== SAVE MATCH =====================
 function saveMatch(){
   const matchno = parseInt(document.getElementById('f-matchno').value);
@@ -611,15 +636,8 @@ function saveMatch(){
     PLAYERS.forEach(p=>{players[p]={joined:false,paid:false,points:0};});
   }
 
-  const pool = paidPlayers.length * fee;
-  let fantasyWinner = null, fantasyWinnerPts = -1;
-  let rankedPaid = paidPlayers.map(p=>({name:p,pts:players[p].points})).sort((a,b)=>b.pts-a.pts);
-  let tiedWinners = [];
-  if(rankedPaid.length>0){
-    fantasyWinnerPts = rankedPaid[0].pts;
-    tiedWinners = rankedPaid.filter(x=>x.pts===fantasyWinnerPts).map(x=>x.name);
-    fantasyWinner = tiedWinners.join(' & ');
-  }
+  const prizes = calculatePrizes({fee, players});
+  const pool = prizes[1] + prizes[2];
 
   let joinedRanks = {};
   if(contest==='yes'&&joinedPlayers.length>0){
@@ -639,9 +657,7 @@ function saveMatch(){
   const matchObj = {
     matchno, date, teams, teamwon, contest, fee, contestLink,
     joinedCount: joinedPlayers.length, paidCount: paidPlayers.length,
-    pool, fantasyWinner, tiedWinners,
-    winningPerWinner: tiedWinners.length>0 ? pool/tiedWinners.length : 0,
-    players, joinedRanks, transferred
+    pool, players, joinedRanks, transferred
   };
 
   if(editingIdx!==null){
@@ -711,11 +727,9 @@ function renderMatchLog(flash) {
   const tbody = document.getElementById('match-tbody');
   const msg = document.getElementById('no-match-msg');
   tbody.innerHTML = '';
-  
   const thead = document.querySelector('#match-table thead tr');
   thead.innerHTML = '';
 
-  // 1. Create Fixed Headers
   const fixedHeaders = ['Match', 'Date', 'Teams', 'Team Won', 'Contest', 'Joined', 'Fee(₹)', 'Pool(₹)', 'Fantasy Winner', 'Payout(₹)', 'Transferred'];
   fixedHeaders.forEach(h => {
     const th = document.createElement('th');
@@ -723,14 +737,12 @@ function renderMatchLog(flash) {
     thead.appendChild(th);
   });
 
-  // 2. Create Player Headers (Vertical Text)
   PLAYERS.forEach(p => {
     const th = document.createElement('th');
     th.innerHTML = `<div style="writing-mode:vertical-rl;transform:rotate(180deg);height:78px;font-size:10px;white-space:nowrap;">${p}<br><span style="color:var(--text2);font-size:9px;">J/P/Pts/Rk</span></div>`;
     thead.appendChild(th);
   });
 
-  // 3. Create Admin Headers (App & Actions)
   const appTh = document.createElement('th'); appTh.textContent = 'MyCircle11 App'; thead.appendChild(appTh);
   const actTh = document.createElement('th'); actTh.textContent = 'Actions'; thead.appendChild(actTh);
 
@@ -745,23 +757,26 @@ function renderMatchLog(flash) {
     const tr = document.createElement('tr');
     if (flash) tr.classList.add('flash-new');
 
-    // Logic: Is the match officially over?
     const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
-    const isWinner = matchIsComplete && m.fantasyWinner && m.fantasyWinner !== '';
+    const prizes = calculatePrizes(m);
 
-    // Calculate Max Points for Highlight (Only if match is complete)
-    let maxPaidPoints = -1;
+    let winnersInfo = [];
     if (matchIsComplete) {
       PLAYERS.forEach(p => {
-        const pd = m.players[p];
-        if (pd && pd.joined && pd.paid) {
-          const pts = parseFloat(pd.points) || 0;
-          if (pts > maxPaidPoints) maxPaidPoints = pts;
-        }
+        const rk = m.joinedRanks ? m.joinedRanks[p] : null;
+        if (rk === 1) winnersInfo.push({ name: p, rank: 1, prize: prizes[1] });
+        if (rk === 2 && prizes.winnerCount === 2) winnersInfo.push({ name: p, rank: 2, prize: prizes[2] });
       });
     }
 
-    // Build Player Data Cells
+    const winnerNamesHtml = winnersInfo.map(w => 
+      `<div style="font-size:11px;">${w.rank===1?'🥇':'🥈'} <b>${w.name}</b></div>`
+    ).join('') || '—';
+
+    const winnerPrizesHtml = winnersInfo.map(w => 
+      `<div style="font-size:11px; color:var(--green);">₹${w.prize.toFixed(2)}</div>`
+    ).join('') || '—';
+
     let playerCells = '';
     PLAYERS.forEach(p => {
       const pd = m.players[p];
@@ -769,41 +784,32 @@ function renderMatchLog(flash) {
         playerCells += `<td style="color:var(--text2);font-size:13px;">—</td>`;
       } else {
         const rank = m.joinedRanks ? m.joinedRanks[p] : '?';
-        const ptsValue = parseFloat(pd.points) || 0;
-        const ptsDisplay = ptsValue.toFixed(2);
-        
-        // Highlight Rule: Complete + Paid + Top Score + Pts > 0
-        const isHighestPaid = matchIsComplete && pd.paid && ptsValue > 0 && ptsValue === maxPaidPoints;
+        const isWinnerCell = matchIsComplete && pd.paid && (rank === 1 || (rank === 2 && prizes.winnerCount === 2));
         const payBtn = !pd.paid ? `<button class="pay-now-btn" style="padding:2px 4px; font-size:8px;" onclick="showPaymentAlert()">💸 Pay Now</button>` : '';
-        
-        const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
 
-        if (isHighestPaid) {
+        if (isWinnerCell) {
+          const medal = rank === 1 ? '🥇' : '🥈';
           playerCells += `<td>
-            <div class="rank-1-box">
-              <div style="font-size:9px;">✅ Joined</div>
-              <div class="paid-yes" style="font-size:9px;">💰 Paid</div>
-              <div style="font-size:14px; font-weight:900; color:var(--accent);">${ptsDisplay}</div>
-              <div class="rank-1" style="font-size:11px; font-weight:900;">#${rank}</div>
+            <div class="${rank === 1 ? 'rank-1-box' : 'rank-2-box'}">
+              <div style="font-size:9px;">✅ Joined | 💰 Paid</div>
+              <div style="font-size:14px; font-weight:900; color:var(--accent);">${pd.points}</div>
+              <div style="font-size:13px;">${medal} <span style="font-size:10px;">#${rank}</span></div>
             </div>
           </td>`;
         } else {
           playerCells += `<td>
             <div style="font-size:9px;">✅ Joined</div>
             <div class="${pd.paid ? 'paid-yes' : 'paid-no'}" style="font-size:9px;">${pd.paid ? '💰 Paid' : '❌ Unpaid'}</div>
-            <div style="font-size:12px; font-weight:700;">${ptsDisplay}</div>
-            <div class="${rankClass}" style="font-size:10px;">#${rank}</div>
+            <div style="font-size:12px; font-weight:700;">${pd.points}</div>
+            <div class="rank-${rank}" style="font-size:10px;">#${rank}</div>
             ${payBtn}
           </td>`;
         }
       }
     });
 
-    const appLinkHtml = m.contestLink 
-      ? `<a href="${m.contestLink}" target="_blank" class="app-link-btn" style="font-size:10px; padding:3px 6px;">🏆 App</a>` 
-      : `—`;
+    const appLinkHtml = m.contestLink ? `<a href="${m.contestLink}" target="_blank" class="app-link-btn" style="font-size:10px; padding:3px 6px;">🏆 App</a>` : `—`;
 
-    // Construct the Row
     tr.innerHTML = `
       <td><span class="match-no-badge">#${m.matchno}</span></td>
       <td style="font-size:11px;">${formatDate(m.date)}</td>
@@ -813,10 +819,10 @@ function renderMatchLog(flash) {
       <td style="font-size:11px;">${m.contest === 'yes' ? m.joinedCount + '/' + PLAYERS.length : '—'}</td>
       <td style="font-size:11px;">₹${m.fee}</td>
       <td style="color:var(--green); font-weight:700; font-size:11px;">₹${m.pool}</td>
-      <td style="font-size:11px;">${isWinner ? `<span style="color:var(--accent); font-weight:700;">${m.fantasyWinner}</span>` : '—'}</td>
-      <td style="font-size:11px;">${isWinner ? `<span style="color:var(--green); font-weight:700;">₹${m.winningPerWinner.toFixed(2)}</span>` : '—'}</td>
+      <td style="font-size:11px;">${winnerNamesHtml}</td>
+      <td style="font-size:11px;">${winnerPrizesHtml}</td>
       <td>
-        ${(m.contest === 'yes' && isWinner) ? 
+        ${(m.contest === 'yes' && winnersInfo.length > 0) ? 
           `<button class="btn btn-sm ${m.transferred ? 'btn-success' : 'btn-danger'}" onclick="toggleTransfer(${idx})" style="font-size:9px; padding:2px 5px;">
             ${m.transferred ? '✅ Done' : '⏳ Pending'}
           </button>` : '—'}
@@ -829,30 +835,18 @@ function renderMatchLog(flash) {
           <button class="btn btn-sm btn-danger" style="font-size:9px; padding:2px 6px; width:50px;" onclick="deleteMatch(${idx})">🗑 Del</button>
         </div>
       </td>`;
-    
     tbody.appendChild(tr);
   });
-  
   renderTotals();
 }
-  
+
 function renderTotals(){
   const bar = document.getElementById('totals-bar');
-  
-  // 1. Gatekeeper: Define what a "Finished Match" is
   const finishedMatches = matches.filter(m => m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—');
-
   const totalMatches = matches.length;
-  
-  // 2. Only sum pool for finished matches
   const totalPool = finishedMatches.reduce((s, m) => s + (m.pool || 0), 0);
-  
-  // 3. Only count contests for finished matches
   const totalContests = finishedMatches.filter(m => m.contest === 'yes').length;
-  
-  // 4. Only count Payouts if the match is finished AND transferred is exactly true or "Done"
   const totalTransferred = finishedMatches.filter(m => m.transferred === true || m.transferred === 'Done').length;
-
   bar.innerHTML = `
     <div class="total-chip"><div class="total-chip-label">Total Matches</div><div class="total-chip-val">${totalMatches}</div></div>
     <div class="total-chip"><div class="total-chip-label">Contests Played</div><div class="total-chip-val">${totalContests}</div></div>
@@ -861,7 +855,6 @@ function renderTotals(){
   `;
 }
 
-// ===================== PLAYER STATS =====================
 function renderPlayerStats(){
   const wrap = document.getElementById('player-cards-wrap');
   wrap.innerHTML='';
@@ -897,9 +890,11 @@ function renderPlayerStats(){
 
 function computePlayerStats(){
   let stats = {};
-  PLAYERS.forEach(p=>{stats[p]={matchesPlayed:0,contested:0,paidContests:0,wins:0,totalInvested:0,totalWon:0,bestPoints:0,carryFwd:0,perMatchData:[]};});
+  PLAYERS.forEach(p=>{stats[p]={matchesPlayed:0,contested:0,paidContests:0,wins:0,totalInvested:0,totalWon:0,bestPoints:0,carryFwd:0};});
   let cf = {};PLAYERS.forEach(p=>{cf[p]=0;});
   matches.forEach(m=>{
+    const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
+    const prizes = calculatePrizes(m);
     PLAYERS.forEach(p=>{
       const pd=m.players[p];
       if(!pd||!pd.joined) return;
@@ -909,9 +904,15 @@ function computePlayerStats(){
         s.contested++;
         if(pd.paid){s.paidContests++;if(cf[p]<=0) s.totalInvested+=m.fee;else cf[p]-=m.fee;}
         if(pd.points>s.bestPoints) s.bestPoints=pd.points;
-        if(m.tiedWinners&&m.tiedWinners.includes(p)&&m.pool>0){
-          s.wins++;const won=m.winningPerWinner||0;
-          if(m.transferred) s.totalWon+=won;else cf[p]+=won;
+        if(matchIsComplete && pd.paid){
+           const rank = m.joinedRanks ? m.joinedRanks[p] : null;
+           const isRank1Win = (rank === 1);
+           const isRank2Win = (rank === 2 && prizes.winnerCount === 2);
+           if(isRank1Win || isRank2Win){
+              s.wins++;
+              const won = isRank1Win ? prizes[1] : prizes[2];
+              if(m.transferred) s.totalWon+=won;else cf[p]+=won;
+           }
         }
       }
     });
@@ -920,7 +921,6 @@ function computePlayerStats(){
   return stats;
 }
 
-// ===================== LEADERBOARD =====================
 function renderLeaderboard(){
   const grid=document.getElementById('lb-grid');
   grid.innerHTML='';
@@ -955,7 +955,6 @@ function renderLeaderboard(){
   });
 }
 
-// ===================== GRAPHS =====================
 function renderGraphs(){
   const stats=computePlayerStats();destroyCharts();
   const labels=matches.map(m=>`M${m.matchno}`);
@@ -964,7 +963,16 @@ function renderGraphs(){
     const data=matches.map(m=>{
       const pd=m.players[p];
       if(!pd||!pd.joined) return cum;
-      if(m.contest==='yes'){if(pd.paid) cum-=m.fee;if(m.tiedWinners&&m.tiedWinners.includes(p)&&m.transferred) cum+=m.winningPerWinner||0;}
+      const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
+      if(m.contest==='yes'){
+         if(pd.paid) cum-=m.fee;
+         if(matchIsComplete && pd.paid && m.transferred){
+           const prizes = calculatePrizes(m);
+           const rank = m.joinedRanks ? m.joinedRanks[p] : null;
+           if(rank === 1) cum += prizes[1];
+           else if(rank === 2 && prizes.winnerCount === 2) cum += prizes[2];
+         }
+      }
       return parseFloat(cum.toFixed(2));
     });
     return {label:p,data,borderColor:COLORS[i],backgroundColor:COLORS[i]+'22',fill:false,tension:0.3,pointRadius:5,pointHoverRadius:7,borderWidth:2};
@@ -988,42 +996,18 @@ function chartOpts(unit,label){
     scales:{x:{ticks:{color:'#8899bb',font:{family:'Rajdhani',size:11}},grid:{color:'#1e2d5044'}},y:{ticks:{color:'#8899bb',font:{family:'Rajdhani',size:11},callback:v=>`${unit}${v}`},grid:{color:'#1e2d5044'}}}};
 }
 function destroyCharts(){Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});charts={};}
+function formatDate(d){if(!d) return '—';const dt=new Date(d);return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+function showPaymentAlert() {alert(`🏏 IPL Season is On! 🏆\n\nIt looks like your entry fee is still pending. To keep the game fair and fun, please complete your payment! \n\n📍 Where to Pay:\nCheck the pinned message in our WhatsApp group: "_VOIS Dream 11". \n\n📸 Payment Method:\nSimply scan the UPI QR code available there and complete the transfer. \n\nGood luck with the match! See you on the leaderboard! 🔥`);}
 
-// ===================== UTILS =====================
-function formatDate(d){
-  if(!d) return '—';
-  const dt=new Date(d);
-  return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});
-}
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3000);
-}
-
-function showPaymentAlert() {
-  const message = `🏏 IPL Season is On! 🏆\n\n` +
-    `It looks like your entry fee is still pending. To keep the game fair and fun, please complete your payment! \n\n` +
-    `📍 Where to Pay:\nCheck the pinned message in our WhatsApp group: "_VOIS Dream 11". \n\n` +
-    `📸 Payment Method:\nSimply scan the UPI QR code available there and complete the transfer. \n\n` +
-    `Good luck with the match! See you on the leaderboard! 🔥`;
-  
-  alert(message);
-}
-  
-// ===================== INIT =====================
 (function init(){
   document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
   renderPlayerEntries();
   renderMatchLog();
   showSection('matchlog');
-  // Show sync status based on config
   const cfg = getCloudConfig();
-  if(!cfg.binId || !cfg.apiKey){
-    updateSyncUI('error','☁️ Cloud not configured','Click "Cloud Setup" to connect');
-  } else {
-    updateSyncUI('ok','☁️ Cloud configured','Ready to sync on save');
-  }
+  if(!cfg.binId || !cfg.apiKey){updateSyncUI('error','☁️ Cloud not configured','Click "Cloud Setup" to connect');}
+  else {updateSyncUI('ok','☁️ Cloud configured','Ready to sync on save');}
 })();
 </script>
 </body>
