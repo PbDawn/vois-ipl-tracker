@@ -1222,6 +1222,54 @@ function formatDate(d){if(!d) return '—';const dt=new Date(d);return dt.toLoca
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 function showPaymentAlert() {alert(`🏏 IPL Season is On! 🏆\n\nIt looks like your entry fee is still pending. To keep the game fair and fun, please complete your payment! \n\n📍 Where to Pay:\nCheck the pinned message in our WhatsApp group: "_VOIS Dream 11". \n\n📸 Payment Method:\nSimply scan the UPI QR code available there and complete the transfer. \n\nGood luck with the match! See you on the leaderboard! 🔥`);}
 
+// ===================== UPDATED INITIALIZATION WITH AUTO-PULL =====================
+async function pullFromCloud() {
+  const cfg = getCloudConfig();
+  if (!cfg.binId || !cfg.apiKey) return;
+
+  updateSyncUI('syncing', 'Checking Cloud...', 'Fetching latest data...');
+  try {
+    const res = await fetch(`${JSONBIN_BASE}/${cfg.binId}/latest`, {
+      headers: { 'X-Master-Key': cfg.apiKey }
+    });
+    
+    if (res.ok) {
+      const json = await res.json();
+      // Check if cloud data is newer or exists
+      if (json.record && json.record.matches) {
+        matches = json.record.matches;
+        localStorage.setItem('vois_matches', JSON.stringify(matches));
+        renderMatchLog();
+        const now = new Date().toLocaleTimeString('en-IN');
+        updateSyncUI('ok', '☁️ Cloud Synced', `Last pulled: ${now}`);
+      }
+    } else {
+      throw new Error("Failed to fetch");
+    }
+  } catch (e) {
+    updateSyncUI('error', '⚠️ Pull Failed', 'Showing local data only');
+    console.error("Sync Error:", e);
+  }
+}
+
+(function init(){
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  renderPlayerEntries();
+  
+  // 1. Render local data first so the page isn't blank
+  renderMatchLog();
+  showSection('matchlog');
+  
+  const cfg = getCloudConfig();
+  if(!cfg.binId || !cfg.apiKey) {
+    updateSyncUI('error','☁️ Cloud not configured','Click "Cloud Setup" to connect');
+  } else {
+    // 2. Immediately try to pull fresh data from the cloud
+    pullFromCloud();
+  }
+})();
+  
+  /*
 (function init(){
   document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
   renderPlayerEntries();
@@ -1230,7 +1278,7 @@ function showPaymentAlert() {alert(`🏏 IPL Season is On! 🏆\n\nIt looks like
   const cfg = getCloudConfig();
   if(!cfg.binId || !cfg.apiKey){updateSyncUI('error','☁️ Cloud not configured','Click "Cloud Setup" to connect');}
   else {updateSyncUI('ok','☁️ Cloud configured','Ready to sync on save');}
-})();
+})(); */
 </script>
 </body>
 </html>
