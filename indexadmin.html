@@ -589,22 +589,31 @@ function toggleContestFields(){
   document.getElementById('player-section').style.display = v==='yes'?'block':'none';
 }
 
-// ===================== NEW PRIZE LOGIC =====================
+// ===================== UPDATED PRIZE LOGIC =====================
 function calculatePrizes(m) {
   const paidCount = PLAYERS.filter(p => m.players[p] && m.players[p].joined && m.players[p].paid).length;
   const fee = parseFloat(m.fee) || 0;
+  const matchNum = parseInt(m.matchno) || 0;
   let distribution = { 1: 0, 2: 0, winnerCount: 0 };
-  if (paidCount >= 2 && paidCount <= 5) {
+
+  // Rule applies only from Match #3 onwards
+  if (matchNum >= 3) {
+    if (paidCount >= 2 && paidCount <= 5) {
+      distribution[1] = fee * paidCount;
+      distribution.winnerCount = 1;
+    } else if (paidCount === 6) {
+      distribution[1] = fee * 4;
+      distribution[2] = fee * 2;
+      distribution.winnerCount = 2;
+    } else if (paidCount === 7) {
+      distribution[1] = fee * 5;
+      distribution[2] = fee * 2;
+      distribution.winnerCount = 2;
+    }
+  } else {
+    // Default logic for Match #1 and #2: Winner Takes All
     distribution[1] = fee * paidCount;
-    distribution.winnerCount = 1;
-  } else if (paidCount === 6) {
-    distribution[1] = fee * 4;
-    distribution[2] = fee * 2;
-    distribution.winnerCount = 2;
-  } else if (paidCount === 7) {
-    distribution[1] = fee * 5;
-    distribution[2] = fee * 2;
-    distribution.winnerCount = 2;
+    distribution.winnerCount = (paidCount >= 1) ? 1 : 0;
   }
   return distribution;
 }
@@ -636,7 +645,7 @@ function saveMatch(){
     PLAYERS.forEach(p=>{players[p]={joined:false,paid:false,points:0};});
   }
 
-  const prizes = calculatePrizes({fee, players});
+  const prizes = calculatePrizes({matchno, fee, players});
   const pool = prizes[1] + prizes[2];
 
   let joinedRanks = {};
@@ -941,7 +950,7 @@ function renderLeaderboard(){
           <div class="lb-stat">Matches: <span>${p.matchesPlayed}</span></div>
           <div class="lb-stat">Paid: <span>${p.paidContests}</span></div>
           <div class="lb-stat">Wins: <span>${p.wins}</span></div>
-          <div class="lb-stat">Win%: <span>${winpct}%</span></div>
+          <div class="lb-stat">Win%: <span>${p.winpct}%</span></div>
           <div class="lb-stat">Invested: <span>₹${p.totalInvested}</span></div>
           <div class="lb-stat">Won: <span>₹${p.totalWon.toFixed(2)}</span></div>
           ${p.carryFwd>0?`<div class="lb-stat">Carry Fwd: <span class="cf-tag">₹${p.carryFwd.toFixed(2)}</span></div>`:''}
