@@ -396,11 +396,14 @@ let charts = {};
 let isSyncing = false;
 let countdownTimers = {};
 
-// ===================== CLOUD CONFIG =====================
 function getCloudConfig(){
+  // Update these two lines with your actual JSONBin details
+  const mySavedBinId = '69c84b985fdde574550bf9f7'; // Your Bin ID
+  const mySavedApiKey = '$2a$10$pCTh9Y0Z2q1p/HwYTyuLveHg0mY0ORkJdheCdMjtNvEj8YKRkbXu6'; // Your Master Key
+
   return {
-    binId: localStorage.getItem('vois_bin_id') || '',
-    apiKey: localStorage.getItem('vois_api_key') || ''
+    binId: localStorage.getItem('vois_bin_id') || mySavedBinId,
+    apiKey: localStorage.getItem('vois_api_key') || mySavedApiKey
   };
 }
 
