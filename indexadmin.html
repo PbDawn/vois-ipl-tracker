@@ -599,34 +599,44 @@ function toggleContestFields(){
 }
 
 function calculatePrizes(m) {
-  const paidCount = PLAYERS.filter(p => m.players[p] && m.players[p].joined && m.players[p].paid).length;
+  const paidCount = PLAYERS.filter(p => m.players[p]?.joined && m.players[p]?.paid).length;
   const fee = parseFloat(m.fee) || 0;
   const matchNum = parseInt(m.matchno) || 0;
   
-  let dist = { 1: 0, 2: 0, winnerCountLimit: 0, totalPool: 0 };
+  let dist = { 1: 0, 2: 0, winnerCountLimit: 0 };
 
-  // 1. Define the Prize Pool Rules
+  // Define total prize pots based on rules
   if (matchNum >= 3) {
-    if (paidCount >= 2 && paidCount <= 5) {
-      dist[1] = fee * paidCount;
-      dist.winnerCountLimit = 1;
-    } else if (paidCount === 6) {
-      dist[1] = fee * 4;
-      dist[2] = fee * 2;
-      dist.winnerCountLimit = 2;
-    } else if (paidCount === 7) {
-      dist[1] = fee * 5;
-      dist[2] = fee * 2;
-      dist.winnerCountLimit = 2;
-    }
+    if (paidCount >= 2 && paidCount <= 5) { dist[1] = fee * paidCount; dist.winnerCountLimit = 1; }
+    else if (paidCount === 6) { dist[1] = fee * 4; dist[2] = fee * 2; dist.winnerCountLimit = 2; }
+    else if (paidCount === 7) { dist[1] = fee * 5; dist[2] = fee * 2; dist.winnerCountLimit = 2; }
   } else {
     dist[1] = fee * paidCount;
     dist.winnerCountLimit = (paidCount >= 1) ? 1 : 0;
   }
 
-  // 2. Fix the Pool display bug: always return the sum of available prizes
-  dist.totalPool = dist[1] + dist[2];
-  return dist;
+  // Identify eligible PAID winners with points > 0 for splitting
+  const eligiblePaid = PLAYERS
+    .filter(p => m.players?.[p]?.paid && m.players?.[p]?.points > 0)
+    .map(p => ({ name: p, points: m.players[p].points }))
+    .sort((a, b) => b.points - a.points);
+
+  let paidRanks = {};
+  let currentRank = 1;
+  eligiblePaid.forEach((p, i) => {
+    if (i > 0 && p.points < eligiblePaid[i - 1].points) currentRank++;
+    paidRanks[p.name] = currentRank;
+  });
+
+  const r1Count = eligiblePaid.filter(p => paidRanks[p.name] === 1).length;
+  const r2Count = eligiblePaid.filter(p => paidRanks[p.name] === 2).length;
+
+  return {
+    1: r1Count > 0 ? (dist[1] / r1Count) : 0,
+    2: (dist.winnerCountLimit === 2 && r2Count > 0) ? (dist[2] / r2Count) : 0,
+    winnerCountLimit: dist.winnerCountLimit,
+    totalPool: dist[1] + dist[2]
+  };
 }
 
 // ===================== MATCH TIME HELPERS =====================
@@ -1031,50 +1041,49 @@ function renderMatchLog(flash) {
     if (flash) tr.classList.add('flash-new');
 
     const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
-    // --- Replace the winner logic block inside renderMatchLog's loop with this ---
     const prizes = calculatePrizes(m);
     let winnersInfo = [];
-    
-    // Ensure we use the totalPool from the prize calculation for the column
-    const displayPool = prizes.totalPool; 
-    
+
     if (matchIsComplete) {
-      // 1. Identify ALL players at Rank 1 and Rank 2
-      const r1Players = PLAYERS.filter(p => m.joinedRanks && m.joinedRanks[p] === 1 && m.players[p].paid);
-      const r2Players = PLAYERS.filter(p => m.joinedRanks && m.joinedRanks[p] === 2 && m.players[p].paid);
-    
-      // 2. Handle Rank 1 Winners (Split the Rank 1 Pot among ALL tied players)
-      if (r1Players.length > 0) {
-        const splitPrize1 = prizes[1] / r1Players.length;
-        r1Players.forEach(p => {
-          winnersInfo.push({ name: p, rank: 1, prize: splitPrize1 });
-        });
-      }
-    
-      // 3. Handle Rank 2 Winners (ONLY if the rules allow a 2nd place prize for this match)
-      if (prizes.winnerCountLimit === 2 && r2Players.length > 0) {
-        const splitPrize2 = prizes[2] / r2Players.length;
-        r2Players.forEach(p => {
-          winnersInfo.push({ name: p, rank: 2, prize: splitPrize2 });
-        });
-      }
+      // 1. Identify ONLY eligible paid players with points > 0
+      const eligiblePaid = PLAYERS
+        .filter(p => m.players?.[p]?.paid && m.players?.[p]?.points > 0)
+        .map(p => ({ name: p, points: m.players[p].points }))
+        .sort((a, b) => b.points - a.points);
+
+      // 2. Assign Paid-Only Ranks
+      let paidRanks = {};
+      let currentR = 1;
+      eligiblePaid.forEach((player, i) => {
+        if (i > 0 && player.points < eligiblePaid[i - 1].points) currentR++;
+        paidRanks[player.name] = currentR;
+      });
+
+      // 3. Identify Winners based on Paid-Only Ranks
+      const r1Count = eligiblePaid.filter(p => paidRanks[p.name] === 1).length;
+      const r2Count = eligiblePaid.filter(p => paidRanks[p.name] === 2).length;
+
+      eligiblePaid.forEach(p => {
+        if (paidRanks[p.name] === 1) {
+          winnersInfo.push({ name: p.name, rank: 1, prize: prizes[1] / r1Count });
+        } else if (paidRanks[p.name] === 2 && prizes.winnerCountLimit === 2) {
+          winnersInfo.push({ name: p.name, rank: 2, prize: prizes[2] / r2Count });
+        }
+      });
     }
-    
-    // Generate the HTML for the "Fantasy Winner" and "Payout" columns
-    const winnerNamesHtml = winnersInfo.map(w => 
-      `<div style="font-size:11px;">${w.rank === 1 ? '🥇' : '🥈'} <b>${w.name}</b></div>`
+
+    const winnerNamesHtml = winnersInfo.map(w =>
+      `<div style="font-size:11px; height:22px; display:flex; align-items:center;">${w.rank === 1 ? '🥇' : '🥈'} <b>${w.name}</b></div>`
     ).join('') || '—';
-    
-    const winnerPrizesHtml = winnersInfo.map(w => 
-      `<div style="font-size:11px; color:var(--green);">₹${w.prize.toFixed(2)}</div>`
+
+    const winnerPrizesHtml = winnersInfo.map(w =>
+      `<div style="font-size:11px; height:22px; display:flex; align-items:center; color:var(--green);">₹${w.prize.toFixed(2)}</div>`
     ).join('') || '—';
-    // NEW LOGIC: Generate independent buttons for each winner
+
     const transferButtonsHtml = winnersInfo.map(w => {
-      // Check individual status. Handle legacy 'boolean' data or new 'object' data
-      const isDone = (typeof m.transferred === 'object' && m.transferred !== null) 
-                     ? m.transferred[w.name] === true 
+      const isDone = (typeof m.transferred === 'object' && m.transferred !== null)
+                     ? m.transferred[w.name] === true
                      : m.transferred === true;
-                     
       return `
         <div style="height:24px; display:flex; align-items:center; margin-bottom:2px;">
           <button class="btn btn-sm ${isDone ? 'btn-success' : 'btn-danger'}" 
@@ -1091,25 +1100,25 @@ function renderMatchLog(flash) {
       if (!pd || !pd.joined) {
         playerCells += `<td style="color:var(--text2);font-size:13px;">—</td>`;
       } else {
-        const rank = m.joinedRanks ? m.joinedRanks[p] : '?';
-        const isWinnerCell = matchIsComplete && pd.paid && (rank === 1 || (rank === 2 && prizes.winnerCount === 2));
-        const payBtn = !pd.paid ? `<button class="pay-now-btn" style="padding:2px 4px; font-size:8px;" onclick="showPaymentAlert()">💸 Pay Now</button>` : '';
-
-        if (isWinnerCell) {
-          const medal = rank === 1 ? '🥇' : '🥈';
+        const globalRank = m.joinedRanks ? m.joinedRanks[p] : '?';
+        const winEntry = winnersInfo.find(w => w.name === p);
+        
+        if (winEntry) {
           playerCells += `<td>
-            <div class="${rank === 1 ? 'rank-1-box' : 'rank-2-box'}">
+            <div class="${winEntry.rank === 1 ? 'rank-1-box' : 'rank-2-box'}">
               <div style="font-size:9px;">✅ Joined | 💰 Paid</div>
               <div style="font-size:14px; font-weight:900; color:var(--accent);">${pd.points}</div>
-              <div style="font-size:13px;">${medal} <span style="font-size:10px;">#${rank}</span></div>
+              <div style="font-size:13px;">${winEntry.rank === 1 ? '🥇' : '🥈'} <span style="font-size:10px;">#${winEntry.rank}</span></div>
             </div>
           </td>`;
         } else {
+          // FIX: Hide Pay button if match is complete
+          const payBtn = (!pd.paid && !matchIsComplete) ? `<button class="pay-now-btn" style="padding:2px 4px; font-size:8px;" onclick="showPaymentAlert()">💸 Pay Now</button>` : '';
           playerCells += `<td>
             <div style="font-size:9px;">✅ Joined</div>
             <div class="${pd.paid ? 'paid-yes' : 'paid-no'}" style="font-size:9px;">${pd.paid ? '💰 Paid' : '❌ Unpaid'}</div>
             <div style="font-size:12px; font-weight:700;">${pd.points}</div>
-            <div class="rank-${rank}" style="font-size:10px;">#${rank}</div>
+            <div class="rank-${globalRank}" style="font-size:10px;">#${globalRank}</div>
             ${payBtn}
           </td>`;
         }
@@ -1147,7 +1156,7 @@ function renderMatchLog(flash) {
       <td>${m.contest === 'yes' ? '<span class="won-badge">YES</span>' : '<span class="lost-badge">NO</span>'}</td>
       <td style="font-size:11px;">${m.contest === 'yes' ? m.joinedCount + '/' + PLAYERS.length : '—'}</td>
       <td style="font-size:11px;">₹${m.fee}</td>
-      <td style="color:var(--green); font-weight:700; font-size:11px;">₹${m.pool}</td>
+      <td style="color:var(--green); font-weight:700; font-size:11px;">₹${prizes.totalPool}</td>
       <td style="font-size:11px;">${winnerNamesHtml}</td>
       <td style="font-size:11px;">${winnerPrizesHtml}</td>
       <td>${transferButtonsHtml}</td>
@@ -1179,20 +1188,21 @@ function renderMatchLog(flash) {
   renderTotals();
 }
 
-function renderTotals(){
+function renderTotals() {
   const bar = document.getElementById('totals-bar');
   const finishedMatches = matches.filter(m => m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—');
   const totalMatches = matches.length;
-  const totalPool = finishedMatches.reduce((s, m) => s + (m.pool || 0), 0);
+  const totalPool = finishedMatches.reduce((s, m) => s + (calculatePrizes(m).totalPool || 0), 0);
   const totalContests = finishedMatches.filter(m => m.contest === 'yes').length;
-  /* const totalTransferred = finishedMatches.filter(m => m.transferred === true || m.transferred === 'Done').length; */
+  
+  // Updated individual payout count
   const totalTransferred = finishedMatches.reduce((count, m) => {
-  if (m.transferred && typeof m.transferred === 'object') {
-    // Count how many individual players are marked "true" (Done)
-    return count + Object.values(m.transferred).filter(v => v === true).length;
-  }
-  return count;
-}, 0);
+    if (m.transferred && typeof m.transferred === 'object') {
+      return count + Object.values(m.transferred).filter(v => v === true).length;
+    }
+    return count + (m.transferred === true ? 1 : 0);
+  }, 0);
+
   bar.innerHTML = `
     <div class="total-chip"><div class="total-chip-label">Total Matches</div><div class="total-chip-val">${totalMatches}</div></div>
     <div class="total-chip"><div class="total-chip-label">Contests Played</div><div class="total-chip-val">${totalContests}</div></div>
