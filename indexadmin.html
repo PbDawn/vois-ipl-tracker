@@ -800,18 +800,24 @@ function toggleTransfer(idx){
 */
 
 function toggleTransfer(matchIdx, playerName) {
-  // Toggle only the specific player's status within that match
-  if (!matches[matchIdx].transferred) {
+  // 1. Ensure the transferred object exists for this specific match
+  if (!matches[matchIdx].transferred || typeof matches[matchIdx].transferred !== 'object') {
     matches[matchIdx].transferred = {};
   }
   
+  // 2. Toggle the specific player's status
+  // If it was true (Done), it becomes false (Pending), and vice-versa.
   matches[matchIdx].transferred[playerName] = !matches[matchIdx].transferred[playerName];
   
-  saveData();
+  // 3. Persist the change to localStorage and Cloud
+  saveData(); 
+  
+  // 4. Re-render the UI to reflect the change immediately
   renderMatchLog();
   
+  // 5. Provide feedback via a toast notification
   const status = matches[matchIdx].transferred[playerName] ? '✅ Done' : '⏳ Pending';
-  showToast(`${playerName}: Marked as ${status} & syncing!`);
+  showToast(`${playerName}: Status reverted to ${status}`);
 }
 
 // ===================== RENDER MATCH LOG =====================
