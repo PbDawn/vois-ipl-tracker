@@ -718,7 +718,14 @@ function saveMatch(){
   }
 
   const existing = editingIdx!==null ? matches[editingIdx] : null;
-  const transferred = existing ? existing.transferred : false;
+  /* const transferred = existing ? existing.transferred : false; */
+
+  // Initialize transfer status for each player individually
+  let transferred = {};
+  PLAYERS.forEach(p => {
+    // If we are editing, keep the old status, otherwise default to false (Pending)
+    transferred[p] = (existing && existing.transferred) ? (existing.transferred[p] || false) : false;
+  });
 
   const matchObj = {
     matchno, date, matchTime, teams, teamwon, contest, fee, contestLink,
@@ -783,15 +790,33 @@ function deleteMatch(idx){
   showToast('Match deleted & syncing to cloud.');
 }
 
+/*
 function toggleTransfer(idx){
   matches[idx].transferred = !matches[idx].transferred;
   saveData();
   renderMatchLog();
   showToast(matches[idx].transferred ? '✅ Marked as Transferred & syncing!' : '⏳ Marked as Pending & syncing!');
 }
+*/
+
+function toggleTransfer(matchIdx, playerName) {
+  // Toggle only the specific player's status within that match
+  if (!matches[matchIdx].transferred) {
+    matches[matchIdx].transferred = {};
+  }
+  
+  matches[matchIdx].transferred[playerName] = !matches[matchIdx].transferred[playerName];
+  
+  saveData();
+  renderMatchLog();
+  
+  const status = matches[matchIdx].transferred[playerName] ? '✅ Done' : '⏳ Pending';
+  showToast(`${playerName}: Marked as ${status} & syncing!`);
+}
 
 // ===================== RENDER MATCH LOG =====================
-function renderMatchLog(flash) {
+/*
+  function renderMatchLog(flash) {
   clearAllCountdownTimers();
 
   const tbody = document.getElementById('match-tbody');
@@ -948,6 +973,177 @@ function renderMatchLog(flash) {
   });
 
   renderTotals();
+} */
+
+// ===================== RENDER MATCH LOG =====================
+function renderMatchLog(flash) {
+  clearAllCountdownTimers();
+
+  const tbody = document.getElementById('match-tbody');
+  const msg = document.getElementById('no-match-msg');
+  tbody.innerHTML = '';
+  const thead = document.querySelector('#match-table thead tr');
+  thead.innerHTML = '';
+
+  const fixedHeaders = ['Match', 'Date', 'Teams', 'Team Won', 'Match Time', 'Contest', 'Joined', 'Fee(₹)', 'Pool(₹)', 'Fantasy Winner', 'Payout(₹)', 'Transferred'];
+  fixedHeaders.forEach(h => {
+    const th = document.createElement('th');
+    th.textContent = h;
+    thead.appendChild(th);
+  });
+
+  PLAYERS.forEach(p => {
+    const th = document.createElement('th');
+    th.innerHTML = `<div style="writing-mode:vertical-rl;transform:rotate(180deg);height:78px;font-size:10px;white-space:nowrap;">${p}<br><span style="color:var(--text2);font-size:9px;">J/P/Pts/Rk</span></div>`;
+    thead.appendChild(th);
+  });
+
+  const appTh = document.createElement('th'); appTh.textContent = 'MyCircle11 App'; thead.appendChild(appTh);
+  const actTh = document.createElement('th'); actTh.textContent = 'Actions'; thead.appendChild(actTh);
+
+  if (matches.length === 0) {
+    msg.style.display = 'block';
+    renderTotals();
+    return;
+  }
+  msg.style.display = 'none';
+
+  const nextUpcoming = findNextUpcomingMatch();
+
+  matches.forEach((m, idx) => {
+    const tr = document.createElement('tr');
+    if (flash) tr.classList.add('flash-new');
+
+    const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
+    const prizes = calculatePrizes(m);
+
+    let winnersInfo = [];
+    if (matchIsComplete) {
+      PLAYERS.forEach(p => {
+        const rk = m.joinedRanks ? m.joinedRanks[p] : null;
+        if (rk === 1) winnersInfo.push({ name: p, rank: 1, prize: prizes[1] });
+        if (rk === 2 && prizes.winnerCount === 2) winnersInfo.push({ name: p, rank: 2, prize: prizes[2] });
+      });
+    }
+
+    // UPDATED: Added fixed height to divs for perfect horizontal alignment across columns
+    const winnerNamesHtml = winnersInfo.map(w =>
+      `<div style="font-size:11px; height:24px; display:flex; align-items:center;">${w.rank===1?'🥇':'🥈'} <b>${w.name}</b></div>`
+    ).join('') || '—';
+
+    const winnerPrizesHtml = winnersInfo.map(w =>
+      `<div style="font-size:11px; height:24px; display:flex; align-items:center; color:var(--green);">₹${w.prize.toFixed(2)}</div>`
+    ).join('') || '—';
+
+    // NEW LOGIC: Generate independent buttons for each winner
+    const transferButtonsHtml = winnersInfo.map(w => {
+      // Check individual status. Handle legacy 'boolean' data or new 'object' data
+      const isDone = (typeof m.transferred === 'object' && m.transferred !== null) 
+                     ? m.transferred[w.name] === true 
+                     : m.transferred === true;
+                     
+      return `
+        <div style="height:24px; display:flex; align-items:center; margin-bottom:2px;">
+          <button class="btn btn-sm ${isDone ? 'btn-success' : 'btn-danger'}" 
+                  onclick="toggleTransfer(${idx}, '${w.name}')" 
+                  style="font-size:9px; padding:1px 5px; width:65px;">
+            ${isDone ? '✅ Done' : '⏳ Pending'}
+          </button>
+        </div>`;
+    }).join('') || '—';
+
+    let playerCells = '';
+    PLAYERS.forEach(p => {
+      const pd = m.players[p];
+      if (!pd || !pd.joined) {
+        playerCells += `<td style="color:var(--text2);font-size:13px;">—</td>`;
+      } else {
+        const rank = m.joinedRanks ? m.joinedRanks[p] : '?';
+        const isWinnerCell = matchIsComplete && pd.paid && (rank === 1 || (rank === 2 && prizes.winnerCount === 2));
+        const payBtn = !pd.paid ? `<button class="pay-now-btn" style="padding:2px 4px; font-size:8px;" onclick="showPaymentAlert()">💸 Pay Now</button>` : '';
+
+        if (isWinnerCell) {
+          const medal = rank === 1 ? '🥇' : '🥈';
+          playerCells += `<td>
+            <div class="${rank === 1 ? 'rank-1-box' : 'rank-2-box'}">
+              <div style="font-size:9px;">✅ Joined | 💰 Paid</div>
+              <div style="font-size:14px; font-weight:900; color:var(--accent);">${pd.points}</div>
+              <div style="font-size:13px;">${medal} <span style="font-size:10px;">#${rank}</span></div>
+            </div>
+          </td>`;
+        } else {
+          playerCells += `<td>
+            <div style="font-size:9px;">✅ Joined</div>
+            <div class="${pd.paid ? 'paid-yes' : 'paid-no'}" style="font-size:9px;">${pd.paid ? '💰 Paid' : '❌ Unpaid'}</div>
+            <div style="font-size:12px; font-weight:700;">${pd.points}</div>
+            <div class="rank-${rank}" style="font-size:10px;">#${rank}</div>
+            ${payBtn}
+          </td>`;
+        }
+      }
+    });
+
+    const appLinkHtml = m.contestLink ? `<a href="${m.contestLink}" target="_blank" class="app-link-btn" style="font-size:10px; padding:3px 6px;">🏆 App</a>` : `—`;
+
+    let matchTimeCellHtml = '';
+    const isNextUpcoming = nextUpcoming && nextUpcoming.matchno === m.matchno;
+
+    if (matchIsComplete) {
+      matchTimeCellHtml = `
+        <div class="completed-badge">✅ Completed</div>
+        ${m.matchTime ? `<div class="scheduled-time">${formatMatchTimeLabel(m.matchTime)}</div>` : ''}
+      `;
+    } else if (isNextUpcoming && m.matchTime) {
+      const timerId = 'timer-'+m.matchno;
+      matchTimeCellHtml = `
+        <div class="scheduled-time" style="color:var(--text2);margin-bottom:3px;">${formatMatchTimeLabel(m.matchTime)}</div>
+        <div class="time-countdown" id="${timerId}"><span class="timer-icon">⏱</span> Starts in: <span id="${timerId}-val">--:--:--</span></div>
+      `;
+    } else if (m.matchTime) {
+      matchTimeCellHtml = `<div style="font-size:12px;font-weight:700;color:var(--text);">${formatMatchTimeLabel(m.matchTime)}</div>`;
+    } else {
+      matchTimeCellHtml = `<span style="color:var(--text2);">—</span>`;
+    }
+
+    tr.innerHTML = `
+      <td><span class="match-no-badge">#${m.matchno}</span></td>
+      <td style="font-size:11px;">${formatDate(m.date)}</td>
+      <td><span class="team-tag">${m.teams}</span></td>
+      <td style="font-size:11px; font-weight:700;">${m.teamwon || '—'}</td>
+      <td style="min-width:120px;">${matchTimeCellHtml}</td>
+      <td>${m.contest === 'yes' ? '<span class="won-badge">YES</span>' : '<span class="lost-badge">NO</span>'}</td>
+      <td style="font-size:11px;">${m.contest === 'yes' ? m.joinedCount + '/' + PLAYERS.length : '—'}</td>
+      <td style="font-size:11px;">₹${m.fee}</td>
+      <td style="color:var(--green); font-weight:700; font-size:11px;">₹${m.pool}</td>
+      <td style="font-size:11px;">${winnerNamesHtml}</td>
+      <td style="font-size:11px;">${winnerPrizesHtml}</td>
+      <td>${transferButtonsHtml}</td>
+      ${playerCells}
+      <td style="text-align:center;">${appLinkHtml}</td>
+      <td>
+        <div style="display:flex; gap:4px; flex-direction:column; align-items:center;">
+          <button class="btn btn-sm btn-primary" style="font-size:9px; padding:2px 6px; width:50px;" onclick="editMatch(${idx})">✏️ Edit</button>
+          <button class="btn btn-sm btn-danger" style="font-size:9px; padding:2px 6px; width:50px;" onclick="deleteMatch(${idx})">🗑 Del</button>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+
+    if (isNextUpcoming && m.matchTime) {
+      const timerId = 'timer-'+m.matchno;
+      const targetDt = getMatchDateTime(m);
+      const tick = () => {
+        const el = document.getElementById(timerId+'-val');
+        if(!el){ clearInterval(countdownTimers[timerId]); return; }
+        const diff = targetDt - new Date();
+        el.textContent = formatCountdown(diff);
+        if(diff <= 0){ el.textContent = 'Starting!'; clearInterval(countdownTimers[timerId]); }
+      };
+      tick();
+      countdownTimers[timerId] = setInterval(tick, 1000);
+    }
+  });
+
+  renderTotals();
 }
 
 function renderTotals(){
@@ -956,7 +1152,14 @@ function renderTotals(){
   const totalMatches = matches.length;
   const totalPool = finishedMatches.reduce((s, m) => s + (m.pool || 0), 0);
   const totalContests = finishedMatches.filter(m => m.contest === 'yes').length;
-  const totalTransferred = finishedMatches.filter(m => m.transferred === true || m.transferred === 'Done').length;
+  /* const totalTransferred = finishedMatches.filter(m => m.transferred === true || m.transferred === 'Done').length; */
+  const totalTransferred = finishedMatches.reduce((count, m) => {
+  if (m.transferred && typeof m.transferred === 'object') {
+    // Count how many individual players are marked "true" (Done)
+    return count + Object.values(m.transferred).filter(v => v === true).length;
+  }
+  return count;
+}, 0);
   bar.innerHTML = `
     <div class="total-chip"><div class="total-chip-label">Total Matches</div><div class="total-chip-val">${totalMatches}</div></div>
     <div class="total-chip"><div class="total-chip-label">Contests Played</div><div class="total-chip-val">${totalContests}</div></div>
