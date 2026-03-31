@@ -603,45 +603,30 @@ function calculatePrizes(m) {
   const fee = parseFloat(m.fee) || 0;
   const matchNum = parseInt(m.matchno) || 0;
   
-  let rank1Pot = 0;
-  let rank2Pot = 0;
-  let winnerCountLimit = 0;
+  let dist = { 1: 0, 2: 0, winnerCountLimit: 0, totalPool: 0 };
 
-  // 1. Calculate Total Pots
+  // 1. Define the Prize Pool Rules
   if (matchNum >= 3) {
     if (paidCount >= 2 && paidCount <= 5) {
-      rank1Pot = fee * paidCount;
-      winnerCountLimit = 1;
+      dist[1] = fee * paidCount;
+      dist.winnerCountLimit = 1;
     } else if (paidCount === 6) {
-      rank1Pot = fee * 4;
-      rank2Pot = fee * 2;
-      winnerCountLimit = 2;
+      dist[1] = fee * 4;
+      dist[2] = fee * 2;
+      dist.winnerCountLimit = 2;
     } else if (paidCount === 7) {
-      rank1Pot = fee * 5;
-      rank2Pot = fee * 2;
-      winnerCountLimit = 2;
+      dist[1] = fee * 5;
+      dist[2] = fee * 2;
+      dist.winnerCountLimit = 2;
     }
   } else {
-    rank1Pot = fee * paidCount;
-    winnerCountLimit = (paidCount >= 1) ? 1 : 0;
+    dist[1] = fee * paidCount;
+    dist.winnerCountLimit = (paidCount >= 1) ? 1 : 0;
   }
 
-  // 2. Count tied players for splitting
-  const rankCounts = { 1: 0, 2: 0 };
-  if (m.joinedRanks) {
-    PLAYERS.forEach(p => {
-      const rk = m.joinedRanks[p];
-      if (rk === 1 && m.players[p].paid) rankCounts[1]++;
-      if (rk === 2 && m.players[p].paid) rankCounts[2]++;
-    });
-  }
-
-  // 3. Return the individual shared prize
-  return {
-    1: rankCounts[1] > 0 ? (rank1Pot / rankCounts[1]) : 0,
-    2: rankCounts[2] > 0 ? (rank2Pot / rankCounts[2]) : 0,
-    winnerCountLimit: winnerCountLimit
-  };
+  // 2. Fix the Pool display bug: always return the sum of available prizes
+  dist.totalPool = dist[1] + dist[2];
+  return dist;
 }
 
 // ===================== MATCH TIME HELPERS =====================
@@ -694,7 +679,7 @@ function clearAllCountdownTimers(){
   countdownTimers = {};
 }
 
-// ===================== SAVE MATCH =====================
+// ===================== FIXED SAVE MATCH =====================
 function saveMatch(){
   const matchno = parseInt(document.getElementById('f-matchno').value);
   const date = document.getElementById('f-date').value;
@@ -722,28 +707,32 @@ function saveMatch(){
     PLAYERS.forEach(p=>{players[p]={joined:false,paid:false,points:0};});
   }
 
-  const prizes = calculatePrizes({matchno, fee, players});
-  const pool = prizes[1] + prizes[2];
-
+  // --- FIX 1: DENSE RANKING (Prevents skipping ranks like 1 to 3) ---
   let joinedRanks = {};
-  if(contest==='yes'&&joinedPlayers.length>0){
-    let sorted = joinedPlayers.map(p=>({name:p,pts:players[p].points})).sort((a,b)=>b.pts-a.pts);
-    let rank=1;
-    for(let i=0;i<sorted.length;){
-      let j=i;
-      while(j<sorted.length&&sorted[j].pts===sorted[i].pts) j++;
-      for(let k=i;k<j;k++) joinedRanks[sorted[k].name]=rank;
-      rank=j+1;i=j;
+  if(contest==='yes' && joinedPlayers.length > 0){
+    let sorted = joinedPlayers
+      .map(p => ({ name: p, pts: players[p].points }))
+      .sort((a, b) => b.pts - a.pts);
+
+    let currentRank = 1;
+    for (let i = 0; i < sorted.length; i++) {
+      // If this player's points are lower than the previous player's, increment rank
+      if (i > 0 && sorted[i].pts < sorted[i - 1].pts) {
+        currentRank++;
+      }
+      joinedRanks[sorted[i].name] = currentRank;
     }
   }
 
-  const existing = editingIdx!==null ? matches[editingIdx] : null;
-  /* const transferred = existing ? existing.transferred : false; */
+  // --- FIX 2: POOL CALCULATION (Passes current ranks to ensure pool isn't 0) ---
+  // We temporarily create a partial match object to help calculatePrizes count winners
+  const prizes = calculatePrizes({ matchno, fee, players, joinedRanks }); 
+  const pool = (prizes[1] || 0) + (prizes[2] || 0); 
 
-  // Initialize transfer status for each player individually
+  const existing = editingIdx !== null ? matches[editingIdx] : null;
+
   let transferred = {};
   PLAYERS.forEach(p => {
-    // If we are editing, keep the old status, otherwise default to false (Pending)
     transferred[p] = (existing && existing.transferred) ? (existing.transferred[p] || false) : false;
   });
 
@@ -762,12 +751,13 @@ function saveMatch(){
     if(dupIdx>=0){matches[dupIdx]=matchObj;}
     else{matches.push(matchObj);matches.sort((a,b)=>a.matchno-b.matchno);}
   }
+
   saveData();
   showToast(`Match #${matchno} saved & syncing to cloud! 🏏`);
   clearForm();
   renderMatchLog();
 }
-
+  
 function clearForm(){
   document.getElementById('f-matchno').value='';
   document.getElementById('f-date').value='';
@@ -1041,26 +1031,36 @@ function renderMatchLog(flash) {
     if (flash) tr.classList.add('flash-new');
 
     const matchIsComplete = m.teamwon && m.teamwon.trim() !== '' && m.teamwon !== '—';
-    // --- Inside renderMatchLog's matches.forEach loop ---
+    // --- Replace the winner logic block inside renderMatchLog's loop with this ---
     const prizes = calculatePrizes(m);
     let winnersInfo = [];
     
-    if (matchIsComplete) {
-      // Find EVERYONE at Rank 1
-      PLAYERS.forEach(p => {
-        const rk = m.joinedRanks ? m.joinedRanks[p] : null;
-        const pd = m.players[p];
-        if (!pd || !pd.paid || !rk) return;
+    // Ensure we use the totalPool from the prize calculation for the column
+    const displayPool = prizes.totalPool; 
     
-        if (rk === 1) {
-          winnersInfo.push({ name: p, rank: 1, prize: prizes[1] });
-        } else if (rk === 2 && prizes.winnerCountLimit === 2) {
-          winnersInfo.push({ name: p, rank: 2, prize: prizes[2] });
-        }
-      });
+    if (matchIsComplete) {
+      // 1. Identify ALL players at Rank 1 and Rank 2
+      const r1Players = PLAYERS.filter(p => m.joinedRanks && m.joinedRanks[p] === 1 && m.players[p].paid);
+      const r2Players = PLAYERS.filter(p => m.joinedRanks && m.joinedRanks[p] === 2 && m.players[p].paid);
+    
+      // 2. Handle Rank 1 Winners (Split the Rank 1 Pot among ALL tied players)
+      if (r1Players.length > 0) {
+        const splitPrize1 = prizes[1] / r1Players.length;
+        r1Players.forEach(p => {
+          winnersInfo.push({ name: p, rank: 1, prize: splitPrize1 });
+        });
+      }
+    
+      // 3. Handle Rank 2 Winners (ONLY if the rules allow a 2nd place prize for this match)
+      if (prizes.winnerCountLimit === 2 && r2Players.length > 0) {
+        const splitPrize2 = prizes[2] / r2Players.length;
+        r2Players.forEach(p => {
+          winnersInfo.push({ name: p, rank: 2, prize: splitPrize2 });
+        });
+      }
     }
     
-    // Render ALL winners in the "Fantasy Winner" column
+    // Generate the HTML for the "Fantasy Winner" and "Payout" columns
     const winnerNamesHtml = winnersInfo.map(w => 
       `<div style="font-size:11px;">${w.rank === 1 ? '🥇' : '🥈'} <b>${w.name}</b></div>`
     ).join('') || '—';
@@ -1068,7 +1068,6 @@ function renderMatchLog(flash) {
     const winnerPrizesHtml = winnersInfo.map(w => 
       `<div style="font-size:11px; color:var(--green);">₹${w.prize.toFixed(2)}</div>`
     ).join('') || '—';
-
     // NEW LOGIC: Generate independent buttons for each winner
     const transferButtonsHtml = winnersInfo.map(w => {
       // Check individual status. Handle legacy 'boolean' data or new 'object' data
